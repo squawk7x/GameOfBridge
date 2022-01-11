@@ -91,8 +91,11 @@ class Jchoice:
 	def toggle_js(self):
 		self.js.insert(0, self.js.pop())
 	
-	def set_j(self):
-		self.j = self.js[-1]
+	def set_j(self, color=None):
+		if color:
+			self.j = self.js[color]
+		else:
+			self.j = self.js[-1]
 	
 	def clear_j(self):
 		self.j = None
@@ -164,18 +167,20 @@ class Deck:
 			return self.blind.pop()
 		else:
 			print('not enough cards available')
+			exit()
 	
 	# stack methods
 	def show_stack(self, visible=False):
 		stack = ''
-		stack += f'{20 * " "}{jchoice.get_j()}{(self.stack[-1])}'
-		for card in range(len(self.stack) - 1):
+		stack += f'{jchoice.get_j()}'
+		for card in self.stack:
 			if visible:
-				stack += str(card)
+				stack = str(card) + stack
 			else:
 				stack += '## '
+		stack = f'{jchoice.get_j()}' + stack
 		print(f'{20 * " "}Stack ({len(self.stack)}) card(s):')
-		print(f'{stack}\n')
+		print(f'{20 * " "}{stack}\n')
 	
 	def put_card_on_stack(self, card):
 		self.stack.append(card)
@@ -435,11 +440,6 @@ class Player:
 	def is_robot(self):
 		return self.robot
 	
-	def play_robot(self):
-		while not self.hand.get_possible_cards():
-			self.get_card_from_blind()
-		self.play_card()
-
 
 class Bridge:
 	'''
@@ -616,17 +616,20 @@ class Bridge:
 			'\n| TAB: toggle | SHIFT: put | ALT: draw | SPACE: next Player | s: scores | n: new game | q:uit game |')
 	
 	def make_choice_for_J(self):
-		self.show_jcoice()
-		while True:
-			jkey = keyboard.read_hotkey(suppress=False)
-			if jkey == 'tab':
-				jchoice.toggle_js()
-				deck.show()
-				self.player.show()
-				self.show_jcoice()
-			if jkey == 'space':
-				jchoice.set_j()
-				break
+		if self.player.is_robot():
+			jchoice.j = jchoice.js[random.randint(0, 3)]
+		else:
+			self.show_jcoice()
+			while True:
+				jkey = keyboard.read_hotkey(suppress=False)
+				if jkey == 'tab':
+					jchoice.toggle_js()
+					deck.show()
+					self.player.show()
+					self.show_jcoice()
+				if jkey == 'space':
+					jchoice.set_j()
+					break
 	
 	def show_jcoice(self):
 		print(f'\n{20 * " "}\u2191\u2191')
@@ -681,7 +684,7 @@ class Bridge:
 			# winner = sorted(self.player_list, key=lambda player: player.score, reverse=True).pop()
 			print(f'{27 * " "}+ + + G A M E  O V E R + + + \n')
 			print(f'{34 * " "}| (n)ew game |\n')
-			keyboard.wait('n', suppress=False)
+			keyboard.wait('n')
 			self.number_of_games += 1
 	
 	def show_scores(self, wait_for_keyboard=True):
@@ -692,7 +695,7 @@ class Bridge:
 			print(f'\n\nPlaying 1st round - No score list availabe yet\n')
 		if wait_for_keyboard:
 			print(f'{22 * " "}(r)eturn\n')
-			keyboard.wait('r', suppress=False)
+			keyboard.wait('r')
 	
 	def is_next_player_possible(self):
 		
@@ -726,7 +729,9 @@ class Bridge:
 				0       1       1       N
 				0       1       0       N
 				0       0       1       Y
-				0       0       0       N
+				0       0       0       N       <-- must draw card
+				
+				                        N       <-- when '6'
 		'''
 		
 		if self.player.hand.cards_played:
@@ -748,10 +753,26 @@ class Bridge:
 			self.show_full_deck()
 			
 			if self.player.is_robot():
+				for suit in suits[0]:
+					self.player.hand.cards.append(Card(suit, 'J'))
+				
 				while not self.is_next_player_possible():
-					self.player.play_robot()
+					
+					if self.player.hand.possible_cards:
+						while self.player.hand.possible_cards:
+							self.player.play_card()
+							self.player.hand.get_possible_cards()
+						if deck.get_top_card_from_stack().rank == 'J':
+							if self.player.hand.cards_played:
+								self.make_choice_for_J()
+					else:
+						self.player.get_card_from_blind()
+						self.player.hand.get_possible_cards()
+					self.show_full_deck()
+					
 				self.activate_next_player()
-				keyboard.wait('space', suppress=False)
+				
+				keyboard.wait('space')
 				continue
 			
 			key = keyboard.read_hotkey(suppress=False)
