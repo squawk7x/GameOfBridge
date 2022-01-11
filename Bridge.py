@@ -753,7 +753,8 @@ class Bridge:
 			self.show_full_deck()
 			
 			if self.player.is_robot():
-				for suit in suits[0]:
+				#for testing:
+				for suit in suits[0:1]:
 					self.player.hand.cards.append(Card(suit, 'J'))
 				
 				while not self.is_next_player_possible():
@@ -762,9 +763,11 @@ class Bridge:
 						while self.player.hand.possible_cards:
 							self.player.play_card()
 							self.player.hand.get_possible_cards()
-						if deck.get_top_card_from_stack().rank == 'J':
-							if self.player.hand.cards_played:
-								self.make_choice_for_J()
+							
+						#if deck.get_top_card_from_stack().rank == 'J':
+						#	if self.player.hand.cards_played:
+						#		self.make_choice_for_J()
+						
 					else:
 						self.player.get_card_from_blind()
 						self.player.hand.get_possible_cards()
