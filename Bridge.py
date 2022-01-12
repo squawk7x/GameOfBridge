@@ -23,6 +23,7 @@ class Card:
 			self.value = self.set_value(self.rank)
 	
 	def __str__(self):
+		card = None
 		if self.suit == '\u2666':
 			card = f'{suit_colors[0]}{self.suit}{self.rank}{reset_color} '
 		elif self.suit == '\u2665':
@@ -35,6 +36,18 @@ class Card:
 	
 	def __eq__(self, other):
 		if self.suit == other.suit and self.rank == other.rank:
+			return True
+		else:
+			return False
+		
+	def __lt__(self, other):
+		if self.get_value() < other.get_value():
+			return True
+		else:
+			return False
+	
+	def __gt__(self, other):
+		if self.get_value() > other.get_value():
 			return True
 		else:
 			return False
@@ -349,12 +362,20 @@ class Player:
 		
 		for _ in range(5):
 			self.hand.cards.append(deck.blind.pop())
+			
+	def arrange_hand_cards(self):
+		if self.hand.cards:
+			self.hand.cards.sort()
+			if self.hand.cards[0] != self.hand.cards[-1]:
+				while self.hand.cards[-1].rank == 'J':
+					self.hand.cards.insert(0, self.hand.cards.pop())
 	
 	def show(self):
 		self.show_possible_cards()
 		self.show_hand(visible=True)
 	
 	def show_hand(self, visible=False):
+		self.arrange_hand_cards()
 		cards = ''
 		for card in self.hand.cards:
 			if visible:
@@ -518,17 +539,24 @@ class Bridge:
 			os.remove(f'{date.today()}_scores.txt')
 		except OSError as e:
 			print('no scorelist found')
-	
-	def start_round(self):
-		deck.__init__()
-		if self.player_list == []:
-			self.number_of_rounds = 0
-			for player in range(self.number_of_players):
-				self.player_list.append(Player(f'Player-{player + 1}'))
+			
+	def start_game(self):
+		self.number_of_games += 1
+		self.number_of_rounds = 0
 		
+		self.player_list.clear()
+		
+		for player in range(self.number_of_players):
+			self.player_list.append(Player(f'Player-{player + 1}'))
+	
 		for player in self.player_list:
 			if player.name != 'Player-1':
 				player.set_robot(robot=True)
+		
+		self.start_round()
+	
+	def start_round(self):
+		deck.__init__()
 		
 		for player in self.player_list:
 			player.draw_new_cards()
@@ -613,7 +641,7 @@ class Bridge:
 		deck.show()
 		self.player.show()
 		print(
-			'\n| TAB: toggle | SHIFT: put | ALT: draw | SPACE: next Player | s: scores | n: new game | q:uit game |')
+			'\n| TAB: toggle | SHIFT: put | ALT: draw | SPACE: next Player | (s)cores | (q)uit game |')
 	
 	def make_choice_for_J(self):
 		if self.player.is_robot():
@@ -685,7 +713,8 @@ class Bridge:
 			print(f'{27 * " "}+ + + G A M E  O V E R + + + \n')
 			print(f'{34 * " "}| (n)ew game |\n')
 			keyboard.wait('n')
-			self.number_of_games += 1
+			self.start_game()
+			
 	
 	def show_scores(self, wait_for_keyboard=True):
 		try:
@@ -743,40 +772,56 @@ class Bridge:
 			else:
 				return False
 	
+	def wait_for_keyboard(self):
+		
+		key = keyboard.read_hotkey(suppress=False)
+		
+		#Testing:
+		if key == 'c':
+			self.player.hand.cards.clear()
+		if key == '6':
+			for suit in suits:
+				self.player.hand.cards.append(Card(suit, '6'))
+		if key == '8':
+			for suit in suits:
+				self.player.hand.cards.append(Card(suit, '8'))
+		if key == 'j':
+			for suit in suits:
+				self.player.hand.cards.append(Card(suit, 'J'))
+		if key == 'a':
+			for suit in suits:
+				self.player.hand.cards.append(Card(suit, 'A'))
+		#End Testing
+
+		if key == 's':
+			self.show_scores()
+
+		if key == 'space':
+			return key
+	
 	def play(self):
 		
-		self.number_of_games += 1
-		self.start_round()
+		self.start_game()
 		
 		while True:
 			
 			self.show_full_deck()
 			
 			if self.player.is_robot():
-				#for testing:
-				for suit in suits[0:1]:
-					self.player.hand.cards.append(Card(suit, 'J'))
 				
 				while not self.is_next_player_possible():
-					
 					if self.player.hand.possible_cards:
 						while self.player.hand.possible_cards:
 							self.player.play_card()
 							self.player.hand.get_possible_cards()
-							
-						#if deck.get_top_card_from_stack().rank == 'J':
-						#	if self.player.hand.cards_played:
-						#		self.make_choice_for_J()
-						
 					else:
 						self.player.get_card_from_blind()
 						self.player.hand.get_possible_cards()
 					self.show_full_deck()
-					
-				self.activate_next_player()
 				
-				keyboard.wait('space')
-				continue
+				if self.wait_for_keyboard() == 'space':
+					self.activate_next_player()
+					continue
 			
 			key = keyboard.read_hotkey(suppress=False)
 			
@@ -796,9 +841,6 @@ class Bridge:
 					self.player.hand.cards.append(Card(suit, 'A'))
 			if key == 'q':
 				break
-			elif key == 'n':
-				self.player_list = []
-				self.start_round()
 			elif key == 's':
 				self.show_scores()
 			elif key == 'tab':
@@ -808,7 +850,6 @@ class Bridge:
 			elif key == 'shift':
 				self.player.play_card()
 			elif key == 'space':
-				
 				if self.is_next_player_possible():
 					self.activate_next_player()
 
