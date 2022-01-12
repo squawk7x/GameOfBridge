@@ -743,7 +743,7 @@ class Bridge:
 				key = random.choice(['n', 'y'])
 				if key == 'n':
 					print(f'{22 * " "}{self.player.name} said:')
-					print(f"{17 * " "}Let's continue this round")
+					print(f"{17 * ' '}Let's continue this round")
 					print(f'{24 * " "}| SPACE |\n')
 					deck.bridge_monitor.clear()
 					keyboard.wait('space')
