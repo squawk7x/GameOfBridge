@@ -571,8 +571,7 @@ class Bridge:
 			self.shuffler = self.player_list[0]
 		else:
 			self.shuffler = max(self.player_list)
-	
-	# self.shuffler = (sorted(self.player_list, key=lambda player: player.score)).pop()
+			# self.shuffler = (sorted(self.player_list, key=lambda player: player.score)).pop()
 	
 	def activate_next_player(self):
 		self.player.hand.cards_played = []  # this player preparation for next turn
@@ -594,21 +593,33 @@ class Bridge:
 			if card.rank == 'A':
 				aces += 1
 		deck.evaluation.clear()
+		
 		if eights == 1 or (eights and self.number_of_players == 2):
 			for eight in range(eights):
 				self.player.get_card_from_blind(2)
 			self.player.hand.cards_drawn.clear()
 			self.activate_next_player()
+			
 		elif eights >= 2:
-			print(f"\n{13 * ' '}? ? ? How to share the 8's ? ? ?\n")
-			print(f'{13 * " "}| (n)ext player | (a)ll players |\n')
-			key = keyboard.read_hotkey(suppress=False)
+			if self.player.is_robot():
+				key = random.choice(['a', 'n'])
+				if key == 'a':
+					print(f"\n{21 * ' '}8's for all\n")
+				elif key == 'n':
+					print(f"\n{17 * ' '}all 8's for next player\n")
+				keyboard.wait('space')
+				
+			else:
+				print(f"\n{13 * ' '}? ? ? How to share the 8's ? ? ?\n")
+				print(f'{13 * " "}| (n)ext player | (a)ll players |\n')
+				key = keyboard.read_hotkey(suppress=False)
+			
 			if key == 'n':
 				for eight in range(eights):
 					self.player.get_card_from_blind(2)
 				self.player.hand.cards_drawn.clear()
 				self.activate_next_player()
-			if key == 'a':
+			elif key == 'a':
 				leap = 1
 				while leap <= eights:
 					if leap != self.number_of_players:
@@ -730,7 +741,15 @@ class Bridge:
 		
 		if deck.check_is_bridge():
 			self.show_bridge()
-			key = keyboard.read_hotkey(suppress=False)
+			if self.player.is_robot():
+				key = random.choice(['n', 'y'])
+				if key == 'n':
+					print(f'\n{17 * " "}  continue this round\n')
+				elif key == 'y':
+					print(f'\n{17 * " "}* * * B R I D G E * * *\n')
+				keyboard.wait('space')
+			else:
+				key = keyboard.read_hotkey(suppress=False)
 			if key == 'n':
 				pass
 			if key == 'y':
