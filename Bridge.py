@@ -4,7 +4,6 @@
 import os
 import random
 from datetime import date
-
 import keyboard
 
 suits = ['\u2666', '\u2665', '\u2660', '\u2663']
@@ -690,7 +689,7 @@ class Bridge:
 			if player.score == 125:
 				player.score = 0
 			player.show_hand(visible=True)
-			
+		
 		list = sorted(self.player_list, key=lambda player: player.name)
 		try:
 			f = open(f'{date.today()}_scores.txt')
@@ -885,8 +884,6 @@ class Bridge:
 				elif key == 'tab':
 					self.player.toggle_possible_cards()
 				elif key == 'alt':
-					# while not self.next_player_is_possible() and not self.player.hand.possible_cards:
-					# 	self.player.draw_card_from_blind()
 					if self.player.must_draw_card():
 						self.player.draw_card_from_blind()
 				elif key == 'shift':
