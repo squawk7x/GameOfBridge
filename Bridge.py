@@ -423,10 +423,10 @@ class Player:
 		
 		stack_card = deck.get_top_card_from_stack()
 		if stack_card.rank == '6' and not self.hand.possible_cards:
-			#self.draw_card_from_blind()
+			# self.draw_card_from_blind()
 			return True
 		if not self.hand.cards_played and not self.hand.possible_cards and not self.hand.cards_drawn:
-			#self.draw_card_from_blind()
+			# self.draw_card_from_blind()
 			return True
 		else:
 			return False
@@ -438,7 +438,7 @@ class Player:
 			deck.put_card_on_stack(card)
 			self.hand.cards_played.append(card)
 			deck.append_card_for_evaluation(card)
-			#self.hand.get_possible_cards()
+		# self.hand.get_possible_cards()
 		if not is_initial_card and self.hand.possible_cards:
 			card = self.hand.possible_cards.pop()
 			self.hand.cards.remove(card)
@@ -446,7 +446,7 @@ class Player:
 			deck.put_card_on_stack(card)
 			self.hand.cards_played.append(card)
 			deck.append_card_for_evaluation(card)
-			#self.hand.get_possible_cards()
+			# self.hand.get_possible_cards()
 			jchoice.clear_j()
 	
 	def set_robot(self, robot=False):
@@ -690,6 +690,7 @@ class Bridge:
 			if player.score == 125:
 				player.score = 0
 			player.show_hand(visible=True)
+			
 		list = sorted(self.player_list, key=lambda player: player.name)
 		try:
 			f = open(f'{date.today()}_scores.txt')
@@ -708,7 +709,7 @@ class Bridge:
 					f.write(" {:4d}    ".format(player.score))
 				f.write('\n')
 		self.show_scores(wait_for_keyboard=False)
-		# self.set_shuffler()
+		self.set_shuffler()
 		if self.shuffler.score <= 125:
 			print(f'{15 * " "}{self.shuffler.name} will start next round\n')
 			print(f'{22 * " "}| next (r)ound |\n')
@@ -780,7 +781,7 @@ class Bridge:
 			if self.player.hand.cards_played:
 				self.make_choice_for_J()
 				return True
-
+		
 		'''
 		next player possible, (except 6 on stack) if:
 
@@ -848,11 +849,11 @@ class Bridge:
 					while self.player.hand.possible_cards:
 						self.player.play_card()
 						self.player.hand.get_possible_cards()
-				
+					
 					while self.player.must_draw_card():
 						self.player.draw_card_from_blind()
 						self.player.hand.get_possible_cards()
-						
+				
 				self.show_full_deck()
 				
 				if self.wait_for_keyboard() == 'space':
