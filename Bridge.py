@@ -309,7 +309,7 @@ class Handdeck:
 						self.possible_cards.append(card)
 			elif stack_card.rank == 'J':
 				for card in self.cards:
-					if card.suit == jchoice.get_j_suit() or card.rank == 'J':
+					if card.rank == 'J':
 						self.possible_cards.append(card)
 			else:
 				for card in self.cards:
@@ -394,7 +394,7 @@ class Player:
 			self.hand.cards.insert(0, card)
 			self.hand.possible_cards.insert(0, card)
 	
-	def get_card_from_blind(self, cards=1):
+	def draw_card_from_blind(self, cards=1):
 		for card in range(cards):
 			card = deck.card_from_blind()
 			self.hand.cards.append(card)
@@ -405,29 +405,29 @@ class Player:
 		'''
 		must draw card, if:
 		---------------------------------
-		 card   possible  card    pull
-		played    card    drawn   card
-			1       1       1       N
-			1       1       0       N
-			1       0       1       N
-			1       0       0       N
-			0       1       1       N
-			0       1       0       N
-			0       0       1       N
-			0       0       0       Y       <--
+		 card   possible  card    pull  next player
+		played    card    drawn   card  possible
+			1       1       1       N       Y
+			1       1       0       N       Y
+			1       0       1       N       Y
+			1       0       0       N       Y
+			0       1       1       N       N
+			0       1       0       N       N
+			0       0       1       N       Y
+			0       0       0       Y       N   <-- must draw card
 
 		'6' on stack:
 		-------------
-			1		0		1		Y       <--
+			1		0		1		Y       N   <-- must draw card
 		'''
 		
 		stack_card = deck.get_top_card_from_stack()
 		if stack_card.rank == '6' and not self.hand.possible_cards:
+			#self.draw_card_from_blind()
 			return True
-			#self.get_card_from_blind()
 		if not self.hand.cards_played and not self.hand.possible_cards and not self.hand.cards_drawn:
+			#self.draw_card_from_blind()
 			return True
-			#self.get_card_from_blind()
 		else:
 			return False
 	
@@ -438,7 +438,7 @@ class Player:
 			deck.put_card_on_stack(card)
 			self.hand.cards_played.append(card)
 			deck.append_card_for_evaluation(card)
-			self.hand.get_possible_cards()
+			#self.hand.get_possible_cards()
 		if not is_initial_card and self.hand.possible_cards:
 			card = self.hand.possible_cards.pop()
 			self.hand.cards.remove(card)
@@ -446,7 +446,7 @@ class Player:
 			deck.put_card_on_stack(card)
 			self.hand.cards_played.append(card)
 			deck.append_card_for_evaluation(card)
-			self.hand.get_possible_cards()
+			#self.hand.get_possible_cards()
 			jchoice.clear_j()
 	
 	def set_robot(self, robot=False):
@@ -583,7 +583,7 @@ class Bridge:
 		
 		for card in deck.evaluation:
 			if card.rank == '7':
-				self.player.get_card_from_blind()
+				self.player.draw_card_from_blind()
 				self.player.hand.cards_drawn.clear()
 			if card.rank == '8':
 				eights += 1
@@ -593,7 +593,7 @@ class Bridge:
 		
 		if eights == 1 or (eights and self.number_of_players == 2):
 			for eight in range(eights):
-				self.player.get_card_from_blind(2)
+				self.player.draw_card_from_blind(2)
 			self.player.hand.cards_drawn.clear()
 			self.activate_next_player()
 		
@@ -617,14 +617,14 @@ class Bridge:
 			
 			if key == 'n':
 				for eight in range(eights):
-					self.player.get_card_from_blind(2)
+					self.player.draw_card_from_blind(2)
 				self.player.hand.cards_drawn.clear()
 				self.activate_next_player()
 			elif key == 'a':
 				leap = 1
 				while leap <= eights:
 					if leap != self.number_of_players:
-						self.player.get_card_from_blind(2)
+						self.player.draw_card_from_blind(2)
 						self.player.hand.cards_drawn.clear()
 					else:
 						eights += 1
@@ -763,20 +763,20 @@ class Bridge:
 		else:
 			return False
 	
-	def is_next_player_possible(self):
+	def next_player_is_possible(self):
 		
 		if self.check_if_bridge():
 			self.finish_round()
 			return False
 		
-		if deck.get_top_card_from_stack().rank == '6':
+		elif deck.get_top_card_from_stack().rank == '6':
 			return False
 		
-		if not self.player.hand.cards:
+		elif not self.player.hand.cards:
 			self.finish_round()
 			return False
 		
-		if deck.get_top_card_from_stack().rank == 'J':
+		elif deck.get_top_card_from_stack().rank == 'J':
 			if self.player.hand.cards_played:
 				self.make_choice_for_J()
 				return True
@@ -794,7 +794,7 @@ class Bridge:
 				0       1       0       N
 				0       0       1       Y
 				0       0       0       N       <-- must draw card
-				
+														&
 			   0/1     0/1     0/1      N       <-- when '6'
 		'''
 		
@@ -844,15 +844,16 @@ class Bridge:
 			
 			if self.player.is_robot():
 				
-				while not self.is_next_player_possible():
-					if self.player.hand.possible_cards:
-						while self.player.hand.possible_cards:
-							self.player.play_card()
-							self.player.hand.get_possible_cards()
-					else:
-						self.player.get_card_from_blind()
+				while not self.next_player_is_possible():
+					while self.player.hand.possible_cards:
+						self.player.play_card()
 						self.player.hand.get_possible_cards()
-					self.show_full_deck()
+				
+					while self.player.must_draw_card():
+						self.player.draw_card_from_blind()
+						self.player.hand.get_possible_cards()
+						
+				self.show_full_deck()
 				
 				if self.wait_for_keyboard() == 'space':
 					self.activate_next_player()
@@ -883,14 +884,14 @@ class Bridge:
 				elif key == 'tab':
 					self.player.toggle_possible_cards()
 				elif key == 'alt':
-					while not self.is_next_player_possible() and not self.player.hand.possible_cards:
-						self.player.get_card_from_blind()
-					# if self.player.must_draw_card():
-					# 	self.player.get_card_from_blind()
+					# while not self.next_player_is_possible() and not self.player.hand.possible_cards:
+					# 	self.player.draw_card_from_blind()
+					if self.player.must_draw_card():
+						self.player.draw_card_from_blind()
 				elif key == 'shift':
 					self.player.play_card()
 				elif key == 'space':
-					if self.is_next_player_possible():
+					if self.next_player_is_possible():
 						self.activate_next_player()
 
 
