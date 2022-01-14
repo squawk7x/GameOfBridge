@@ -4,8 +4,8 @@
 import os
 import random
 from datetime import date
-
 import keyboard
+import argparse
 
 suits = ['\u2666', '\u2665', '\u2660', '\u2663']
 ranks = ['6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
@@ -321,13 +321,13 @@ class Handdeck:
 class Player:
     ''' Represents a player with cards in hand '''
     name = None
-    robot = False
+    is_robot = False
     hand = None
     score = 0
 
-    def __init__(self, name=None, robot=False):
+    def __init__(self, name: str, is_robot: bool):
         self.name = name
-        self.robot = robot
+        self.is_robot = is_robot
         self.hand = Handdeck()
 
     def __lt__(self, other):
@@ -449,11 +449,11 @@ class Player:
             # self.hand.get_possible_cards()
             jchoice.clear_j()
 
-    def set_robot(self, robot=False):
-        self.robot = robot
+    def set_robot(self, is_robot=False):
+        self.is_robot = is_robot
 
     def is_robot(self):
-        return self.robot
+        return self.is_robot
 
 
 class Bridge:
@@ -514,26 +514,32 @@ class Bridge:
     number_of_rounds = 0
     number_of_games = 0
     shuffler = None
+    is_robot_game = False
 
-    def __init__(self):
+    def __init__(self, number_players: int, is_robot_game: bool):
 
-        while True:
-            try:
-                print("Enter number of players:")
-                self.number_of_players = int(
-                    keyboard.read_hotkey(suppress=False))
-            except ValueError:
-                print('Valid number, please')
-                continue
-            if 2 <= self.number_of_players <= 4:
-                break
-            else:
-                print('Please enter value between 2 and 4')
-
-        try:
-            os.remove(f'{date.today()}_scores.txt')
-        except OSError as e:
-            print('no scorelist found')
+        # while True:
+        #     try:
+        #         print("Enter number of players:")
+        #         num = keyboard.read_hotkey(suppress=False)
+        #         if num == 'enter':
+        #             self.number_of_players = num_players
+        #         else:
+        #             self.number_of_players = int(num)
+        #     except ValueError:
+        #         print('Valid number, please')
+        #         continue
+        #     if 2 <= self.number_of_players <= 4:
+        #         break
+        #     else:
+        #         print('Please enter value between 2 and 4')
+        #
+        # try:
+        #     os.remove(f'{date.today()}_scores.txt')
+        # except OSError as e:
+        #     print('no scorelist found')
+        self.number_of_players = number_players
+        self.is_robot_game = is_robot_game
 
     def start_game(self):
         self.number_of_games += 1
@@ -542,11 +548,11 @@ class Bridge:
         self.player_list.clear()
 
         for player in range(self.number_of_players):
-            self.player_list.append(Player(f'Player-{player + 1}'))
+            self.player_list.append(Player(f'Player-{player + 1}', self.is_robot_game))
 
-        for player in self.player_list:
-            if player.name != 'Player-1':
-                player.set_robot(robot=True)
+        # for player in self.player_list:
+        #     if player.name != 'Player-1':
+        #         player.set_robot(is_robot=self.is_robot_game)
 
         self.start_round()
 
@@ -570,7 +576,7 @@ class Bridge:
         return self.shuffler
 
     def activate_next_player(self):
-        previous_player_was_robot = self.player.is_robot()
+        previous_player_was_robot = self.player.is_robot
         aces = 0
         eights = 0
 
@@ -654,7 +660,7 @@ class Bridge:
             '\n| TAB: toggle | SHIFT: put | ALT: draw | SPACE: next Player | (s)cores | (q)uit game |')
 
     def make_choice_for_J(self):
-        if self.player.is_robot():
+        if self.player.is_robot:
             jchoice.j = jchoice.js[random.randint(0, 3)]
         else:
             self.show_jcoice()
@@ -714,11 +720,11 @@ class Bridge:
             keyboard.wait('r')
             self.start_round()
         else:
-            print(f'\nThe Winner is ...\n')
-            print(f'{26 * " "}{min(self.player_list).name}\n')
+            print(f'\n{6 * " "}The Winner is ...\n')
+            print(f'{24 * " "}{min(self.player_list).name}\n')
             # winner = sorted(self.player_list, key=lambda player: player.score, reverse=True).pop()
-            print(f'{15 * " "}+ + + G A M E  O V E R + + + \n')
-            print(f'{22 * " "}| (n)ew game |\n')
+            print(f'{14 * " "}+ + + G A M E  O V E R + + + \n')
+            print(f'{21 * " "}| (n)ew game |\n')
             keyboard.wait('n')
             self.start_game()
 
@@ -736,7 +742,7 @@ class Bridge:
         if len(deck.bridge_monitor) >= 4:
             print(f'\n{17 * " "}* * * B R I D G E * * *\n')
 
-            if self.player.is_robot():
+            if self.player.is_robot:
                 key = random.choice(['n', 'y'])
                 if key == 'n':
                     print(f'{22 * " "}{self.player.name} said:')
@@ -841,7 +847,7 @@ class Bridge:
 
             self.show_full_deck()
 
-            if self.player.is_robot():
+            if self.player.is_robot:
 
                 while not self.next_player_is_possible():
                     while self.player.hand.possible_cards:
@@ -893,5 +899,14 @@ class Bridge:
 
 
 if __name__ == "__main__":
-    bridge = Bridge()
+    parser = argparse.ArgumentParser("Game of Bridge - card game for 2 - 4 players")
+    parser.add_argument("--players", "-p", type=int, choices=[2, 3, 4], default=3, help="number of players")
+    parser.add_argument("--is_robot_game", "-r", type=bool, choices=[True], default=False, help="play against computer")
+    try:
+        args = parser.parse_args()
+    except AttributeError:
+        parser.print_help()
+        parser.exit()
+
+    bridge = Bridge(args.players, args.is_robot_game)
     bridge.play()
