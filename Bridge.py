@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import argparse
 import os
 import random
 from datetime import date
+
 import keyboard
-import argparse
 
 suits = ['\u2666', '\u2665', '\u2660', '\u2663']
 ranks = ['6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
@@ -549,7 +550,7 @@ class Bridge:
                 except ValueError:
                     print('Valid input, please')
                     continue
-                if robot == 'y' or robot =='n':
+                if robot == 'y' or robot == 'n':
                     break
                 else:
                     print("Please enter 'y' or 'n'")
@@ -558,7 +559,6 @@ class Bridge:
             os.remove(f'{date.today()}_scores.txt')
         except OSError as e:
             print('no scorelist found')
-
 
     def start_game(self):
         self.number_of_games += 1
