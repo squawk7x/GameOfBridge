@@ -512,26 +512,32 @@ class Bridge:
             print('no scorelist found')
 
     def print_the_rules(self):
-        print('''
-        Game of Bridge.
+
+        rules_of_the_game = f'''
+
+        {30 * " "}Game of Bridge
     
         Rules Of The Game:
         ------------------
-        Bridge is played with 36 cards (4 suits and ranks from 6 to Ace)by 2-4 players.
-        Each player starts with 5 cards from blind. First player puts a card onto the stack
+        Bridge is played with 36 cards (4 suits and ranks from 6 to Ace) by 2-4 players.
+        Each player starts with 5 cards. The first player puts a card onto the stack
         and can add more cards with same rank. The next player can play first card either
-        same suit or same rank and can play more cards with same rank. First the cards on hand
-        must be used and at least 1 card must be played or must be drawn from blind.
-        No more than one card can be drawn from blind, except a '6' must be covered.
+        same suit or same rank and can play more cards with same rank. At first the cards on hand
+        must be used and at least 1 card must be played. If the player does not have a suitable 
+        card - a card must be drawn from blind and the next player continues the round.
+        No more than one card can be drawn from blind, except a '6' on the stack must be covered.
     
         Special Cards:
         --------------
-        6   must be covered by same player, drawing cards until possible move
+        6   must be covered by same player, may be by drawing cards from blind
+            until the '6' is covered by a different rank.
         7   next player must draw 1 card from blind
-        8   next player must draw all cards (2 for each '8') from blind and will be passed over
-            - or: the following players must draw 2 cards and will be passed over
+        8   the next player must draw 2 cards and will be passed over. When multiple '8'
+            were played either next player must draw 2 for each '8' on stack and will be 
+            passed over - or the following players must draw 2 cards and will be passed over
         J   can be played to any suit and player can choose which suit must follow
-        A   next player will be passed over. With multiple 'A' the next players will be passed over
+        A   next player will be passed over. 
+            With multiple 'A' the next players will be passed over
     
         Special Rule 'Bridge':
         ----------------------
@@ -540,32 +546,33 @@ class Bridge:
     
         Counting:
         ---------
-        A round is over when one player has no more cards.
-        The players note their points:
-    
-                6   0
-                7   0
-                8   0
-                9   0
-                10  10
-                J   20  (-20)
-                Q   10
-                K   10
-                A   15
+        A round is over when one player has no more cards. The players note their points. 
+        These are the card values:
+
+         6: 0
+         7: 0
+         8: 0
+         9: 0
+        10: 10
+         J: 20 (-20)
+         Q: 10
+         K: 10
+         A: 15
     
         The points of several rounds will be added.
-        If the blind was empty and the stack was reshuffeled, the points of this round are doubled, tripled, ...
-        If a player finishes a round with a 'J' his score will be reduced by 20 for each 'J' of this last move.
+        If a player finishes a round with a 'J' his score will be reduced
+        by 20 for each 'J' on stack of his last move.
         If a player reaches exactly 125 points, his score is back on 0!
+        When the blind was empty and therefor the stack was reshuffeled,
+        the points of this round are doubled (trippled, ...).
         The player with the highest score starts the next round.
     
         The game is over once a player reaches more than 125 points.
-        
-        
-        Press 'space' to continue
-    
-        ''')
-        keyboard.wait('space')
+
+        '''
+
+        print(rules_of_the_game)
+        return rules_of_the_game
 
     def start_game(self):
         self.number_of_games += 1
@@ -681,8 +688,9 @@ class Bridge:
         deck.show()
         self.player.show()
         print(
-            '\n| TAB: toggle |  SHIFT: put  |  ALT: draw  | SPACE: next Player |'
-            '\n|  (s)cores   | play (r)ules | (q)uit game |')
+            '\n| TAB: toggle |  SHIFT: put  |  ALT: draw  |'
+            '\n|           SPACE: next Player             |'
+            '\n|  (s)cores   |   (r)ules    | (q)uit game |')
 
     def make_choice_for_J(self):
         if self.player.is_robot:
@@ -703,7 +711,9 @@ class Bridge:
     def show_jcoice(self):
         print(f'\n{20 * " "}\u2191\u2191')
         jchoice.show_js()
-        print(f'{5 * " "}| TAB: toggle color | SPACE: set color / next player |')
+        print(
+            '\n|              TAB: toggle                 |'
+            '\n|           SPACE: next Player             |')
 
     def show_other_players(self, player: Player):
         for p in self.player_list:
@@ -893,6 +903,7 @@ class Bridge:
 
                 if key == 'r':
                     self.print_the_rules()
+                    keyboard.wait('space')
                 if key == 'ctrl+c':
                     self.player.hand.cards.clear()
                 if key == 'ctrl+t':
@@ -926,7 +937,7 @@ class Bridge:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser("Bridge", description="Game Of Bridge - Card game for 2-4 players")
+    parser = argparse.ArgumentParser("Bridge", description=Bridge.print_the_rules(None))
     parser.add_argument("--number_of_players", "-p", type=int, choices=[2, 3, 4], help="number of players")
     parser.add_argument("--is_robot_game", "-r", type=bool, choices=[True], help="play against robots")
     try:
