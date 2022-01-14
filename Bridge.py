@@ -516,30 +516,49 @@ class Bridge:
     shuffler = None
     is_robot_game = False
 
-    def __init__(self, number_players: int, is_robot_game: bool):
+    def __init__(self, number_of_players: int, is_robot_game: bool):
 
-        # while True:
-        #     try:
-        #         print("Enter number of players:")
-        #         num = keyboard.read_hotkey(suppress=False)
-        #         if num == 'enter':
-        #             self.number_of_players = num_players
-        #         else:
-        #             self.number_of_players = int(num)
-        #     except ValueError:
-        #         print('Valid number, please')
-        #         continue
-        #     if 2 <= self.number_of_players <= 4:
-        #         break
-        #     else:
-        #         print('Please enter value between 2 and 4')
-        #
-        # try:
-        #     os.remove(f'{date.today()}_scores.txt')
-        # except OSError as e:
-        #     print('no scorelist found')
-        self.number_of_players = number_players
-        self.is_robot_game = is_robot_game
+        if not number_of_players:
+            while True:
+                try:
+                    print("Enter number of players (2-4):")
+                    num = keyboard.read_hotkey(suppress=False)
+                    if num == 'enter':
+                        self.number_of_players = number_of_players
+                    else:
+                        self.number_of_players = int(num)
+                except ValueError:
+                    print('Valid number, please')
+                    continue
+                if 2 <= self.number_of_players <= 4:
+                    break
+                else:
+                    print('Please enter value between 2 and 4')
+        else:
+            self.number_of_players = number_of_players
+
+        if not is_robot_game:
+            while True:
+                try:
+                    print("Play against Robots (y)es or (n)o:")
+                    robot = keyboard.read_hotkey(suppress=False)
+                    if robot == 'n':
+                        self.is_robot_game = False
+                    if robot == 'y':
+                        self.is_robot_game = True
+                except ValueError:
+                    print('Valid input, please')
+                    continue
+                if robot == 'y' or robot =='n':
+                    break
+                else:
+                    print("Please enter 'y' or 'n'")
+
+        try:
+            os.remove(f'{date.today()}_scores.txt')
+        except OSError as e:
+            print('no scorelist found')
+
 
     def start_game(self):
         self.number_of_games += 1
@@ -550,9 +569,7 @@ class Bridge:
         for player in range(self.number_of_players):
             self.player_list.append(Player(f'Player-{player + 1}', self.is_robot_game))
 
-        # for player in self.player_list:
-        #     if player.name != 'Player-1':
-        #         player.set_robot(is_robot=self.is_robot_game)
+        self.player_list[0].is_robot = False  # at least one player must be 'human'
 
         self.start_round()
 
@@ -899,14 +916,14 @@ class Bridge:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser("Game of Bridge - card game for 2 - 4 players")
-    parser.add_argument("--players", "-p", type=int, choices=[2, 3, 4], default=3, help="number of players")
-    parser.add_argument("--is_robot_game", "-r", type=bool, choices=[True], default=False, help="play against computer")
+    parser = argparse.ArgumentParser("Bridge")
+    parser.add_argument("--number_of_players", "-p", type=int, choices=[2, 3, 4], help="number of players")
+    parser.add_argument("--is_robot_game", "-r", type=bool, choices=[True], help="play against robots")
     try:
         args = parser.parse_args()
     except AttributeError:
         parser.print_help()
         parser.exit()
 
-    bridge = Bridge(args.players, args.is_robot_game)
+    bridge = Bridge(args.number_of_players, args.is_robot_game)
     bridge.play()
