@@ -357,9 +357,9 @@ class Player:
 
     def arrange_hand_cards(self):
         if self.hand.cards:
-            self.hand.cards.sort()
-            if self.hand.cards[-1].rank == 'J':
-                self.hand.cards.insert(0, self.hand.cards.pop())
+            self.hand.cards.sort(reverse=True)
+            # if self.hand.cards[-1].rank == 'J':
+            #     self.hand.cards.insert(0, self.hand.cards.pop())
 
     def show(self):
         self.show_possible_cards()
@@ -464,7 +464,7 @@ class Bridge:
     number_of_rounds = 0
     number_of_games = 0
     shuffler = None
-    is_robot_game = False
+    is_robot_game = None
 
     def __init__(self, number_of_players: int, is_robot_game: bool):
 
@@ -473,15 +473,12 @@ class Bridge:
                 try:
                     print("Enter number of players (2-4):")
                     num = keyboard.read_hotkey(suppress=False)
-                    if num == 'enter':
-                        self.number_of_players = 3
-                    else:
-                        self.number_of_players = int(num)
+                    self.number_of_players = int(num)
                 except ValueError:
                     print('Valid number, please')
                     continue
                 if 2 <= self.number_of_players <= 4:
-                    print(f'Game with {self.number_of_players} players')
+                    print(f'\nGame with {self.number_of_players} players')
                     break
                 else:
                     print('Please enter value between 2 and 4')
@@ -495,21 +492,18 @@ class Bridge:
                     robot = keyboard.read_hotkey(suppress=False)
                     if robot == 'n':
                         self.is_robot_game = False
-                    if robot == 'y':
+                        print(f'\nYou play all {self.number_of_players - 1} players yourself')
+                    elif robot == 'y':
                         self.is_robot_game = True
+                        print(f'\nYou play against {self.number_of_players - 1} robot(s)!')
+                    else:
+                        continue
                 except ValueError:
                     print('Valid input, please')
                     continue
-                if robot == 'y' or robot == 'n':
-                    if self.is_robot_game:
-                        print(f'You play against {self.number_of_players - 1} robots!')
-                    else:
-                        print(f'You will play all {self.number_of_players} players')
-                    print(f"\n{30 * ' '}Press 'enter' to start")
-                    keyboard.wait('enter')
-                    break
-                else:
-                    print("Please enter 'y' or 'n'")
+                print(f"\n{25 * ' '}Press 'enter' to start")
+                keyboard.wait('enter')
+                break
         else:
             self.is_robot_game = is_robot_game
 
@@ -906,7 +900,7 @@ class Bridge:
 
                 if key == 'r':
                     self.print_the_rules_of_the_game()
-                    print(f"{8 * ' '}press 'ESC' to continue the game")
+                    print(f"{6 * ' '}press 'ESC' to continue the game")
                     keyboard.wait('escape')
                 if key == 'ctrl+c':
                     self.player.hand.cards.clear()
