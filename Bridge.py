@@ -474,13 +474,14 @@ class Bridge:
                     print("Enter number of players (2-4):")
                     num = keyboard.read_hotkey(suppress=False)
                     if num == 'enter':
-                        self.number_of_players = number_of_players
+                        self.number_of_players = 3
                     else:
                         self.number_of_players = int(num)
                 except ValueError:
                     print('Valid number, please')
                     continue
                 if 2 <= self.number_of_players <= 4:
+                    print(f'Game with {self.number_of_players} players')
                     break
                 else:
                     print('Please enter value between 2 and 4')
@@ -500,6 +501,12 @@ class Bridge:
                     print('Valid input, please')
                     continue
                 if robot == 'y' or robot == 'n':
+                    if self.is_robot_game:
+                        print(f'You play against {self.number_of_players - 1} robots!')
+                    else:
+                        print(f'You will play all {self.number_of_players} players')
+                    print(f"\n{30 * ' '}Press 'enter' to start")
+                    keyboard.wait('enter')
                     break
                 else:
                     print("Please enter 'y' or 'n'")
@@ -511,9 +518,9 @@ class Bridge:
         except OSError as e:
             print('no scorelist found')
 
-    def print_the_rules(self):
+    def print_the_rules_of_the_game(self):
 
-        rules_of_the_game = f'''
+        the_rules_of_the_game = f'''
 
         {30 * " "}Game of Bridge
     
@@ -571,8 +578,7 @@ class Bridge:
 
         '''
 
-        print(rules_of_the_game)
-        return rules_of_the_game
+        print(the_rules_of_the_game)
 
     def start_game(self):
         self.number_of_games += 1
@@ -690,7 +696,7 @@ class Bridge:
         print(
             '\n| TAB: toggle |  SHIFT: put  |  ALT: draw  |'
             '\n|           SPACE: next Player             |'
-            '\n|  (s)cores   |   (r)ules    | (q)uit game |')
+            '\n|  (s)cores   |   (r)ules    |   (q)uit    |')
 
     def make_choice_for_J(self):
         if self.player.is_robot:
@@ -712,7 +718,7 @@ class Bridge:
         print(f'\n{20 * " "}\u2191\u2191')
         jchoice.show_js()
         print(
-            '\n|              TAB: toggle                 |'
+            '\n|             TAB:   toggle                |'
             '\n|           SPACE: next Player             |')
 
     def show_other_players(self, player: Player):
@@ -769,9 +775,6 @@ class Bridge:
                 print(f.read())
         except IOError:
             print(f'\n\nPlaying 1st round - No score list availabe yet\n')
-        if wait_for_keyboard:
-            print(f'{22 * " "}(r)eturn\n')
-            keyboard.wait('r')
 
     def check_if_bridge(self):
         if len(deck.bridge_monitor) >= 4:
@@ -902,8 +905,9 @@ class Bridge:
                 key = keyboard.read_hotkey(suppress=False)
 
                 if key == 'r':
-                    self.print_the_rules()
-                    keyboard.wait('space')
+                    self.print_the_rules_of_the_game()
+                    print(f"{8 * ' '}press 'ESC' to continue the game")
+                    keyboard.wait('escape')
                 if key == 'ctrl+c':
                     self.player.hand.cards.clear()
                 if key == 'ctrl+t':
@@ -924,6 +928,8 @@ class Bridge:
                     break
                 elif key == 's':
                     self.show_scores()
+                    print(f'{8 * " "}press (ESC) to continue the game\n')
+                    keyboard.wait('escape')
                 elif key == 'tab':
                     self.player.toggle_possible_cards()
                 elif key == 'alt':
@@ -937,7 +943,7 @@ class Bridge:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser("Bridge", description=Bridge.print_the_rules(None))
+    parser = argparse.ArgumentParser("Bridge", description=Bridge.print_the_rules_of_the_game(None))
     parser.add_argument("--number_of_players", "-p", type=int, choices=[2, 3, 4], help="number of players")
     parser.add_argument("--is_robot_game", "-r", type=bool, choices=[True], help="play against robots")
     try:
