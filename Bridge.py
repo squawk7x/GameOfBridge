@@ -355,11 +355,14 @@ class Player:
         for card in range(5):
             self.hand.cards.append(deck.blind.pop())
 
-    def arrange_hand_cards(self):
-        pattern = 'J978QK6A'
+    def arrange_hand_cards(self, pattern=0):
+        patterns = (('J', '9', '7', '8', '10', 'Q', 'K', 'A', '6'),
+                    ('J', 'A', 'K', 'Q', '10', '9', '8', '7', '6'),
+                    ('9', '8', '7', '6', '10', 'Q', 'K', 'A', 'J'))
+
         sorted_cards = []
 
-        for rank in pattern:
+        for rank in patterns[pattern]:
             for card in self.hand.cards:
                 if card.rank == rank:
                     sorted_cards.append(card)
