@@ -643,13 +643,13 @@ class Bridge:
             if previous_player_was_robot:
                 key = random.choice(['a', 'n'])
                 if key == 'a':
-                    print(f'{20 * " "}{self.player.name} said:')
-                    print(f"{22 * ' '}Share the 8's")
-                    print(f'{24 * " "}| SPACE |\n')
+                    print(f'\n{20 * " "}{self.player.name} said:')
+                    print(f"{20 * ' '}Share the 8's")
+                    print(f'{23 * " "}| SPACE |\n')
                 elif key == 'n':
-                    print(f'{24 * " "}{self.player.name}:')
+                    print(f'\n{20 * " "}{self.player.name} said:')
                     print(f"{17 * ' '}All 8's for next player")
-                    print(f'{24 * " "}| SPACE |\n')
+                    print(f'{23 * " "}| SPACE |\n')
                 keyboard.wait('space')
 
             else:
@@ -695,9 +695,9 @@ class Bridge:
         deck.show()
         self.player.show()
         print(
-            '\n| TAB: toggle |  SHIFT: put  |  ALT: draw  |'
-            '\n|           SPACE: next Player             |'
-            '\n|  (s)cores   |   (r)ules    |   (q)uit    |')
+            f'\n{7 * " "}| TAB: toggle |  SHIFT: put  |  ALT: draw  |'
+            f'\n{7 * " "}|           SPACE: next Player             |'
+            f'\n{7 * " "}|  (s)cores   |   (r)ules    |   (q)uit    |')
 
     def make_choice_for_J(self):
         if self.player.is_robot:
