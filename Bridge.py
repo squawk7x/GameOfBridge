@@ -356,10 +356,14 @@ class Player:
             self.hand.cards.append(deck.blind.pop())
 
     def arrange_hand_cards(self):
-        if self.hand.cards:
-            self.hand.cards.sort(reverse=True)
-            # if self.hand.cards[-1].rank == 'J':
-            #     self.hand.cards.insert(0, self.hand.cards.pop())
+        pattern = 'J978QK6A'
+        sorted_cards = []
+
+        for rank in pattern:
+            for card in self.hand.cards:
+                if card.rank == rank:
+                    sorted_cards.append(card)
+        self.hand.cards = sorted_cards
 
     def show(self):
         self.show_possible_cards()
