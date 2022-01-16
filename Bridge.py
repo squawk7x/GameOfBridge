@@ -183,6 +183,7 @@ class Deck:
             print('not enough cards available')
             exit()
 
+
     # stack methods
     def show_stack(self, visible=False):
         stack = ''
