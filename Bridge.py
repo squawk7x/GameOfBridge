@@ -197,8 +197,12 @@ class Deck:
         print(f'{20 * " "}Stack ({len(self.stack)}) card(s):')
         print(f'{20 * " "}{stack}\n')
 
+    def show_played_cards(self):
+        pass
+
     def put_card_on_stack(self, card):
         self.stack.append(card)
+        self.update_bridge_monitor(card)
 
     def get_top_card_from_stack(self):
         if self.stack:
@@ -276,7 +280,7 @@ class Handdeck:
         ---------
         suit    rank    J
 
-        stack_card = '6' 3r
+        stack_card = '6'
         suit    rank    J
 
         stack_card = 'J'
@@ -293,7 +297,7 @@ class Handdeck:
         suit            J
 
         '''
-
+        # 1st move:
         if not self.cards_played:
             if stack_card.rank == 'J':
                 for card in self.cards:
@@ -303,6 +307,7 @@ class Handdeck:
                 for card in self.cards:
                     if card.rank == stack_card.rank or card.suit == stack_card.suit or card.rank == 'J':
                         self.possible_cards.append(card)
+        # 2nd moves
         if self.cards_played:
             if stack_card.rank == '6':
                 for card in self.cards:
@@ -356,6 +361,10 @@ class Player:
             self.hand.cards.append(deck.blind.pop())
 
     def arrange_hand_cards(self, pattern=0):
+        """
+
+        :param pattern:
+        """
         patterns = (('J', '9', '7', '8', '10', 'Q', 'K', 'A', '6'),
                     ('J', 'A', 'K', 'Q', '10', '9', '8', '7', '6'),
                     ('9', '8', '7', '6', '10', 'Q', 'K', 'A', 'J'))
@@ -431,31 +440,31 @@ class Player:
 
         stack_card = deck.get_top_card_from_stack()
         if stack_card.rank == '6' and not self.hand.possible_cards:
-            # self.draw_card_from_blind()
             return True
         if not self.hand.cards_played and not self.hand.possible_cards and not self.hand.cards_drawn:
-            # self.draw_card_from_blind()
-            return True
+                                          return True
         else:
             return False
 
     def play_card(self, is_initial_card=False):
         if is_initial_card:
             card = self.hand.cards.pop()
-            deck.update_bridge_monitor(card)
             deck.put_card_on_stack(card)
             self.hand.cards_played.append(card)
             deck.append_card_for_evaluation(card)
-        # self.hand.get_possible_cards()
         if not is_initial_card and self.hand.possible_cards:
             card = self.hand.possible_cards.pop()
             self.hand.cards.remove(card)
-            deck.update_bridge_monitor(card)
             deck.put_card_on_stack(card)
             self.hand.cards_played.append(card)
             deck.append_card_for_evaluation(card)
-            # self.hand.get_possible_cards()
             jchoice.clear_j()
+        # if card:
+        #     deck.update_bridge_monitor(card)
+        #     deck.put_card_on_stack(card)
+        #     self.hand.cards_played.append(card)
+        #     deck.append_card_for_evaluation(card)
+        #     jchoice.clear_j()
 
     def set_robot(self, is_robot=False):
         self.is_robot = is_robot
