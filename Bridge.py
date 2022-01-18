@@ -824,7 +824,7 @@ class Bridge:
                                                         &
                0/1     0/1     0/1      N       <-- when '6'
         '''
-		
+
 		if deck.cards_played:
 			return True
 		
