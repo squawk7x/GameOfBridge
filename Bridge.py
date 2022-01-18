@@ -88,8 +88,7 @@ class Jsuit:
 
 
 class Jchoice:
-	# array of suits for 'J'
-	js = []
+	js = []  # array of suits for 'J'
 	j = None
 	
 	def __init__(self):
@@ -146,7 +145,6 @@ class Deck:
 	# deck methods
 	def show(self):
 		self.show_blind(visible=False)
-		# self.show_cards_played()
 		self.show_bridge_monitor()
 		self.show_stack(visible=False)
 	
@@ -180,16 +178,11 @@ class Deck:
 	# stack methods
 	def show_stack(self, visible=True):
 		stack = ''
-		# if visible:
-		# 	for card in self.stack:
-		# 		stack = str(card) + stack
-		# else:
-		# 	for c in range(len(self.stack) - 1):
-		# 		stack += '## '
-		# 	stack = str(self.stack[-1]) + stack
+		
 		if visible:
 			for card in self.stack:
 				stack = str(card) + stack
+		
 		else:
 			if self.cards_played:
 				for card in range(len(self.stack) - len(self.cards_played)):
@@ -226,17 +219,10 @@ class Deck:
 		print(f'Bridge monitor ({len(self.bridge_monitor)}) card(s):')
 		print(f'{bridge}\n')
 	
-	# cards_played monitor
-	# def append_card_to_cards_played(self, card: Card):
-	# 	# if card.rank in {'7', '8', 'A'}:
-	# 	self.cards_played.append(card)
-	
 	def show_cards_played(self):
 		cards_played = ''
 		for card in self.cards_played:
 			cards_played = str(card) + cards_played
-		# print(f'Card(s) played ({len(self.cards_played)}):')
-		# print(cards_played)
 		return cards_played
 
 
@@ -249,7 +235,6 @@ class Handdeck:
 	def __init__(self):
 		self.cards = []
 		self.cards_drawn = []
-		# self.cards_played = []
 		self.possible_cards = []
 	
 	def __len__(self):
@@ -295,7 +280,6 @@ class Handdeck:
         suit            J
         '''
 		# 1st move:
-		#		if not self.cards_played:
 		if not deck.cards_played:
 			if stack_card.rank == 'J':
 				for card in self.cards:
@@ -305,8 +289,7 @@ class Handdeck:
 				for card in self.cards:
 					if card.rank == stack_card.rank or card.suit == stack_card.suit or card.rank == 'J':
 						self.possible_cards.append(card)
-		# 2nd moves
-		#		if self.cards_played:
+		# 2nd move
 		if deck.cards_played:
 			if stack_card.rank == '6':
 				for card in self.cards:
@@ -340,12 +323,6 @@ class Player:
 			return True
 		else:
 			return False
-	
-	# def __eq__(self, other):
-	# 	if self.score == other.score:
-	# 		return True
-	# 	else:
-	# 		return False
 	
 	def __gt__(self, other):
 		if self.score > other.score:
@@ -448,21 +425,11 @@ class Player:
 		if is_initial_card:
 			card = self.hand.cards.pop()
 			deck.put_card_on_stack(card)
-		# deck.append_card_to_cards_played(card)
-		# self.hand.cards_played.append(card)
 		elif not is_initial_card and self.hand.possible_cards:
 			card = self.hand.possible_cards.pop()
 			self.hand.cards.remove(card)
 			deck.put_card_on_stack(card)
-			# deck.append_card_to_cards_played(card)
-			# self.hand.cards_played.append(card)
 			jchoice.clear_j()
-	
-	# if card:
-	# 	deck.put_card_on_stack(card)
-	# 	deck.append_card_for_cards_played(card)
-	# 	self.hand.cards_played.append(card)
-	# 	jchoice.clear_j()
 	
 	def set_robot(self, is_robot=False):
 		self.is_robot = is_robot
@@ -619,11 +586,11 @@ class Bridge:
 	
 	def activate_next_player(self):
 		previous_player_was_robot = self.player.is_robot
+		dummy = self.player
 		aces = 0
 		eights = 0
 		
-		# self.player.hand.cards_played = []  # this player preparation for next turn
-		self.player.hand.cards_drawn = []  # this player preparation for next turn
+		self.player.hand.cards_drawn.clear()  # this player preparation for next turn
 		self.player_list.append(self.player_list.pop(0))
 		self.player = self.player_list[0]  # next player activated
 		
@@ -648,13 +615,15 @@ class Bridge:
 			if previous_player_was_robot:
 				key = random.choice(['a', 'n'])
 				if key == 'a':
-					print(f'\n{22 * " "}{self.player.name} said:')
+					# print(f'\n{22 * " "}{self.player.name} said:')
+					print(f'\n{22 * " "}{dummy.name} said:')
 					print(f"{21 * ' '}You share the 8's")
-					print(f'{25 * " "}| SPACE |\n')
+					print(f'{21 * " "}|     SPACE    |\n')
 				elif key == 'n':
-					print(f'\n{22 * " "}{self.player.name} said:')
+					# print(f'\n{22 * " "}{self.player.name} said:')
+					print(f'\n{22 * " "}{dummy.name} said:')
 					print(f"{18 * ' '}All 8's for next player")
-					print(f'{25 * " "}| SPACE |\n')
+					print(f'{21 * " "}|     SPACE    |\n')
 				keyboard.wait('space')
 			
 			else:
@@ -725,8 +694,8 @@ class Bridge:
 		print(f'\n{20 * " "}\u2191\u2191')
 		jchoice.show_js()
 		print(
-			'\n|             TAB:   toggle                |'
-			'\n|           SPACE: next Player             |')
+			f'{7 * " "}|              TAB:  toggle                |\n'
+			f'{7 * " "}|            SPACE: set suit               |')
 	
 	def show_other_players(self, player: Player):
 		for p in self.player_list:
@@ -737,7 +706,7 @@ class Bridge:
 		if deck.get_top_card_from_stack().rank == 'J':
 			self.player.score -= 20 * len(deck.bridge_monitor) * deck.shufflings
 		self.activate_next_player()  # cards_played of last round
-		print('\n\n')
+		print('\n')
 		for player in self.player_list:
 			player.score += player.hand.count_points() * deck.shufflings
 			if player.score == 125:
@@ -761,11 +730,11 @@ class Bridge:
 				for player in list:
 					f.write(" {:4d}    ".format(player.score))
 				f.write('\n')
-		self.show_scores(wait_for_keyboard=False)
+		self.show_scores()
 		self.set_shuffler()
 		if self.shuffler.score <= 125:
-			print(f'{15 * " "}{self.shuffler.name} will start next round\n')
-			print(f'{22 * " "}| next (r)ound |\n')
+			print(f'\n  {15 * " "}{self.shuffler.name} will start next round\n')
+			print(f'{21 * " "}| next (r)ound |\n')
 			keyboard.wait('r')
 			self.start_round()
 		else:
@@ -777,7 +746,7 @@ class Bridge:
 			keyboard.wait('n')
 			self.start_game()
 	
-	def show_scores(self, wait_for_keyboard=True):
+	def show_scores(self):
 		try:
 			with open(f'{date.today()}_scores.txt') as f:
 				print(f.read())
@@ -827,18 +796,21 @@ class Bridge:
 			return False
 		
 		elif not self.player.hand.cards:
+			self.show_full_deck()
+			print(f'\n\n{9 * " "}* * * {self.player.name} has won this round! * * *'
+			      f'\n{7 * " "}|            SPACE: show scores            |')
+			keyboard.wait('space')
 			self.finish_round()
 			return False
 		
 		elif deck.get_top_card_from_stack().rank == 'J':
 			
-			# if self.player.hand.cards_played:
 			if deck.cards_played:
 				self.make_choice_for_J()
 				return True
-		
 		'''
         next player possible, (except 6 on stack) if:
+        
              card   possible  card    next
             played    card    drawn   player
                 1       1       1       Y
@@ -853,11 +825,9 @@ class Bridge:
                0/1     0/1     0/1      N       <-- when '6'
         '''
 		
-		# if self.player.hand.cards_played:
 		if deck.cards_played:
 			return True
 		
-		# elif not self.player.hand.cards_played:
 		elif not deck.cards_played:
 			if not self.player.hand.possible_cards and self.player.hand.cards_drawn:
 				return True
@@ -910,7 +880,6 @@ class Bridge:
 						self.player.draw_card_from_blind()
 						self.player.hand.get_possible_cards()
 				
-				# self.show_full_deck()
 				if self.wait_for_keyboard() == 'space':
 					self.activate_next_player()
 			
