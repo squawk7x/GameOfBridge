@@ -34,7 +34,7 @@ class Card:
 		elif self.suit == '\u2663':
 			card = f'{suit_colors[3]}{self.suit}{self.rank}{reset_color} '
 		return card
-
+	
 	def __lt__(self, other):
 		if self.get_value() < other.get_value():
 			return True
@@ -146,7 +146,7 @@ class Deck:
 	# deck methods
 	def show(self):
 		self.show_blind(visible=False)
-		#self.show_cards_played()
+		# self.show_cards_played()
 		self.show_bridge_monitor()
 		self.show_stack(visible=False)
 	
@@ -191,14 +191,15 @@ class Deck:
 			for card in self.stack:
 				stack = str(card) + stack
 		else:
-			for card in range(len(self.stack) - len(self.cards_played)):
-				stack += '## '
-			
-		if self.cards_played:
-			stack = f'{self.show_cards_played()}' + stack
-		else:
-			stack = str(self.stack[-1]) + stack
-			
+			if self.cards_played:
+				for card in range(len(self.stack) - len(self.cards_played)):
+					stack += '## '
+				stack = f'{self.show_cards_played()}' + stack
+			else:
+				for card in range(len(self.stack) - len(self.cards_played) - 1):
+					stack += '## '
+				stack = str(self.stack[-1]) + stack
+		
 		stack = f'{jchoice.get_j()}' + stack
 		print(f'{20 * " "}Stack ({len(self.stack)}) card(s):')
 		print(f'{20 * " "}{stack}\n')
@@ -234,8 +235,8 @@ class Deck:
 		cards_played = ''
 		for card in self.cards_played:
 			cards_played = str(card) + cards_played
-		#print(f'Card(s) played ({len(self.cards_played)}):')
-		#print(cards_played)
+		# print(f'Card(s) played ({len(self.cards_played)}):')
+		# print(cards_played)
 		return cards_played
 
 
@@ -248,7 +249,7 @@ class Handdeck:
 	def __init__(self):
 		self.cards = []
 		self.cards_drawn = []
-		#self.cards_played = []
+		# self.cards_played = []
 		self.possible_cards = []
 	
 	def __len__(self):
@@ -294,7 +295,7 @@ class Handdeck:
         suit            J
         '''
 		# 1st move:
-#		if not self.cards_played:
+		#		if not self.cards_played:
 		if not deck.cards_played:
 			if stack_card.rank == 'J':
 				for card in self.cards:
@@ -305,7 +306,7 @@ class Handdeck:
 					if card.rank == stack_card.rank or card.suit == stack_card.suit or card.rank == 'J':
 						self.possible_cards.append(card)
 		# 2nd moves
-#		if self.cards_played:
+		#		if self.cards_played:
 		if deck.cards_played:
 			if stack_card.rank == '6':
 				for card in self.cards:
@@ -387,11 +388,10 @@ class Player:
 			else:
 				cards += '## '
 		if visible:
-			print(f'{self.name} holds ({len(self.hand.cards)}) card(s) [{self.hand.count_points()} points]:')
+			print(f'{self.name} holds ({len(self.hand.cards)}) card(s) [{self.hand.count_points():2d} points]:')
 		else:
 			print(f'{self.name} holds ({len(self.hand.cards)}) card(s):')
 		print(cards)
-		
 	
 	def show_possible_cards(self):
 		cards = ''
@@ -448,14 +448,14 @@ class Player:
 		if is_initial_card:
 			card = self.hand.cards.pop()
 			deck.put_card_on_stack(card)
-			#deck.append_card_to_cards_played(card)
-			#self.hand.cards_played.append(card)
+		# deck.append_card_to_cards_played(card)
+		# self.hand.cards_played.append(card)
 		elif not is_initial_card and self.hand.possible_cards:
 			card = self.hand.possible_cards.pop()
 			self.hand.cards.remove(card)
 			deck.put_card_on_stack(card)
-			#deck.append_card_to_cards_played(card)
-			#self.hand.cards_played.append(card)
+			# deck.append_card_to_cards_played(card)
+			# self.hand.cards_played.append(card)
 			jchoice.clear_j()
 	
 	# if card:
@@ -622,7 +622,7 @@ class Bridge:
 		aces = 0
 		eights = 0
 		
-		#self.player.hand.cards_played = []  # this player preparation for next turn
+		# self.player.hand.cards_played = []  # this player preparation for next turn
 		self.player.hand.cards_drawn = []  # this player preparation for next turn
 		self.player_list.append(self.player_list.pop(0))
 		self.player = self.player_list[0]  # next player activated
@@ -644,6 +644,7 @@ class Bridge:
 			self.activate_next_player()
 		
 		elif eights >= 2:
+			self.show_full_deck()
 			if previous_player_was_robot:
 				key = random.choice(['a', 'n'])
 				if key == 'a':
@@ -736,6 +737,7 @@ class Bridge:
 		if deck.get_top_card_from_stack().rank == 'J':
 			self.player.score -= 20 * len(deck.bridge_monitor) * deck.shufflings
 		self.activate_next_player()  # cards_played of last round
+		print('\n\n')
 		for player in self.player_list:
 			player.score += player.hand.count_points() * deck.shufflings
 			if player.score == 125:
@@ -830,7 +832,7 @@ class Bridge:
 		
 		elif deck.get_top_card_from_stack().rank == 'J':
 			
-			#if self.player.hand.cards_played:
+			# if self.player.hand.cards_played:
 			if deck.cards_played:
 				self.make_choice_for_J()
 				return True
@@ -851,11 +853,11 @@ class Bridge:
                0/1     0/1     0/1      N       <-- when '6'
         '''
 		
-		#if self.player.hand.cards_played:
+		# if self.player.hand.cards_played:
 		if deck.cards_played:
 			return True
 		
-		#elif not self.player.hand.cards_played:
+		# elif not self.player.hand.cards_played:
 		elif not deck.cards_played:
 			if not self.player.hand.possible_cards and self.player.hand.cards_drawn:
 				return True
