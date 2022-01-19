@@ -149,7 +149,7 @@ class Deck:
 		self.show_stack(visible=False)
 	
 	# blind methods
-	def show_blind(self, visible=False):
+	def show_blind(self, visible=True):
 		blind = ''
 		for card in self.blind:
 			if visible:
@@ -602,7 +602,7 @@ class Bridge:
 				eights += 1
 			if card.rank == 'A':
 				aces += 1
-		deck.cards_played.clear()
+			deck.cards_played.remove(card)
 		
 		if eights == 1 or (eights and self.number_of_players == 2):
 			for eight in range(eights):
@@ -615,13 +615,13 @@ class Bridge:
 			if previous_player_was_robot:
 				key = random.choice(['a', 'n'])
 				if key == 'a':
-					# print(f'\n{22 * " "}{self.player.name} said:')
-					print(f'\n{22 * " "}{dummy.name} said:')
+					# print(f'\n{22 * " "}{self.player.name} says:')
+					print(f'\n{22 * " "}{dummy.name} says:')
 					print(f"{21 * ' '}You share the 8's")
 					print(f'{21 * " "}|     SPACE    |\n')
 				elif key == 'n':
-					# print(f'\n{22 * " "}{self.player.name} said:')
-					print(f'\n{22 * " "}{dummy.name} said:')
+					# print(f'\n{22 * " "}{self.player.name} says:')
+					print(f'\n{22 * " "}{dummy.name} says:')
 					print(f"{18 * ' '}All 8's for next player")
 					print(f'{21 * " "}|     SPACE    |\n')
 				keyboard.wait('space')
@@ -733,7 +733,7 @@ class Bridge:
 		self.show_scores()
 		self.set_shuffler()
 		if self.shuffler.score <= 125:
-			print(f'\n  {15 * " "}{self.shuffler.name} will start next round\n')
+			print(f'\n  {13 * " "}{self.shuffler.name} will start next round\n')
 			print(f'{21 * " "}| next (r)ound |\n')
 			keyboard.wait('r')
 			self.start_round()
@@ -763,14 +763,14 @@ class Bridge:
 			if self.player.is_robot:
 				key = random.choice(['n', 'y'])
 				if key == 'n':
-					print(f'{22 * " "}{self.player.name} said:')
+					print(f'{22 * " "}{self.player.name} says:')
 					print(f"{16 * ' '}Let's continue this round")
 					print(f'{25 * " "}| SPACE |\n')
 					deck.bridge_monitor.clear()
 					keyboard.wait('space')
 					return False
 				elif key == 'y':
-					print(f'{22 * " "}{self.player.name} said:')
+					print(f'{22 * " "}{self.player.name} says:')
 					print(f'{17 * " "}YES - count your points!')
 					print(f'{25 * " "}| SPACE |\n')
 					keyboard.wait('space')
@@ -799,7 +799,7 @@ class Bridge:
 			self.show_full_deck()
 			print(f'\n\n{9 * " "}* * * {self.player.name} has won this round! * * *'
 			      f'\n{7 * " "}|            SPACE: show scores            |')
-			keyboard.wait('space')
+			#keyboard.wait('space')
 			self.finish_round()
 			return False
 		
