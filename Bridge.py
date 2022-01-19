@@ -678,16 +678,15 @@ class Bridge:
 		if self.player.is_robot:
 			jchoice.j = jchoice.js[random.randint(0, 3)]
 		else:
-			self.show_jcoice()
+			jchoice.j = jchoice.js[-1]
+			self.show_full_deck()
 			while True:
 				jkey = keyboard.read_hotkey(suppress=False)
 				if jkey == 'tab':
 					jchoice.toggle_js()
-					deck.show()
-					self.player.show()
-					self.show_jcoice()
+					jchoice.j = jchoice.js[-1]
+					self.show_full_deck()
 				if jkey == 'space':
-					jchoice.set_j()
 					break
 	
 	def show_jcoice(self):
@@ -765,14 +764,14 @@ class Bridge:
 				if key == 'n':
 					print(f'{22 * " "}{self.player.name} says:')
 					print(f"{16 * ' '}Let's continue this round")
-					print(f'{25 * " "}| SPACE |\n')
+					print(f'{22 * " "}|    SPACE    |\n')
 					deck.bridge_monitor.clear()
 					keyboard.wait('space')
 					return False
 				elif key == 'y':
 					print(f'{22 * " "}{self.player.name} says:')
 					print(f'{17 * " "}YES - count your points!')
-					print(f'{25 * " "}| SPACE |\n')
+					print(f'{22 * " "}|    SPACE    |\n')
 					keyboard.wait('space')
 					return True
 			else:
