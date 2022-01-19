@@ -874,11 +874,11 @@ class Bridge:
 					while self.player.hand.possible_cards:
 						self.player.play_card()
 						self.player.hand.get_possible_cards()
-					
+						
 					while self.player.must_draw_card():
 						self.player.draw_card_from_blind()
 						self.player.hand.get_possible_cards()
-				
+						
 				if self.wait_for_keyboard() == 'space':
 					self.activate_next_player()
 			
