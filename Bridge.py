@@ -726,7 +726,7 @@ class Bridge:
                     f'  {self.number_of_games:2d} -{self.number_of_rounds:2d}{7 * " "}')
                 for player in list:
                     f.write(" {:4d}    ".format(player.score))
-                f.write(f'{6 *" "}{(deck.shufflings - 1) * "*"}\n')
+                f.write(f'{6 * " "}{(deck.shufflings - 1) * "*"}\n')
 
         self.show_scores()
 
