@@ -580,14 +580,17 @@ class Bridge:
         if self.shuffler == None:
             self.shuffler = self.player_list[0]
         else:
+            # self.shuffler = (sorted(self.player_list, key=lambda player: player.score)).pop()
             self.shuffler = max(self.player_list)
-        # self.shuffler = (sorted(self.player_list, key=lambda player: player.score)).pop()
+            while self.shuffler != self.player_list[0]:  # Shuffler must be set to playerlist[0]
+                self.cycle_playerlist()
+
         return self.shuffler
 
     def cycle_playerlist(self):
         self.player_list.append(self.player_list.pop(0))
         self.player = self.player_list[0]
-        #self.player.hand.cards_drawn.clear()
+        # self.player.hand.cards_drawn.clear()
 
     def activate_next_player(self):
 
@@ -603,8 +606,6 @@ class Bridge:
                 eights += 1
             elif card.rank == 'A':
                 aces += 1
-
-        self.show_full_deck()
 
         if eights >= 2:
             if self.player.is_robot:
@@ -725,15 +726,11 @@ class Bridge:
                     f'  {self.number_of_games:2d} -{self.number_of_rounds:2d}{7 * " "}')
                 for player in list:
                     f.write(" {:4d}    ".format(player.score))
-                f.write(f'{(deck.shufflings - 1) * "  *"}\n')
+                f.write(f'{6 *" "}{(deck.shufflings - 1) * "*"}\n')
+
         self.show_scores()
+
         self.set_shuffler()
-
-        # Shuffler must be set to playerlist[0]
-
-
-
-
 
         if self.shuffler.score <= 125:
             print(f'\n  {13 * " "}{self.shuffler.name} will start next round\n')
@@ -800,9 +797,8 @@ class Bridge:
 
         elif not self.player.hand.cards:
             self.show_full_deck()
-            print(f'\n\n{7 * " "}| * * * {self.player.name} has won this round! * * * |'
-                  f'\n{7 * " "}|            SPACE: show scores            |')
-            # keyboard.wait('space')
+            print(f'\n\n{7 * " "}| * * * {self.player.name} has won this round! * * * |\n')
+            # keyboard.wait('space')    n
             self.finish_round()
             return True
 
