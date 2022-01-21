@@ -337,9 +337,6 @@ class Player:
             self.hand.cards.append(deck.blind.pop())
 
     def arrange_hand_cards(self, pattern=0):
-        """
-        :param pattern:
-        """
         patterns = (('J', '9', '7', '8', '10', 'Q', 'K', 'A', '6'),
                     ('J', 'A', 'K', 'Q', '10', '9', '8', '7', '6'),
                     ('9', '8', '7', '6', '10', 'Q', 'K', 'A', 'J'))
@@ -661,7 +658,7 @@ class Bridge:
                 leap += 1
 
     def show_full_deck(self):
-        print(f'\n{100 * "-"}')
+        print(f'\n{84 * "-"}')
         self.show_other_players(self.player)
 
         deck.show()
@@ -765,14 +762,14 @@ class Bridge:
                 if key == 'n':
                     print(f'{22 * " "}{self.player.name} says:')
                     print(f"{16 * ' '}Let's continue this round")
-                    print(f'{22 * " "}|    SPACE    |\n')
+                    print(f'{21 * " "}|     SPACE    |\n')
                     deck.bridge_monitor.clear()
                     keyboard.wait('space')
                     return False
                 elif key == 'y':
                     print(f'{22 * " "}{self.player.name} says:')
                     print(f'{17 * " "}YES - count your points!')
-                    print(f'{22 * " "}|    SPACE    |\n')
+                    print(f'{21 * " "}|     SPACE    |\n')
                     keyboard.wait('space')
                     return True
             else:
