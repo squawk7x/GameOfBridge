@@ -587,6 +587,7 @@ class Bridge:
     def cycle_playerlist(self):
         self.player_list.append(self.player_list.pop(0))
         self.player = self.player_list[0]
+        #self.player.hand.cards_drawn.clear()
 
     def activate_next_player(self):
 
@@ -603,7 +604,7 @@ class Bridge:
             elif card.rank == 'A':
                 aces += 1
 
-        deck.cards_played.clear()
+        self.show_full_deck()
 
         if eights >= 2:
             if self.player.is_robot:
@@ -622,7 +623,9 @@ class Bridge:
                 print(f'{13 * " "}| (n)ext player | (a)ll players |\n')
                 key = keyboard.read_hotkey(suppress=False)
 
+        self.player.hand.cards_drawn.clear()
         self.cycle_playerlist()
+        deck.cards_played.clear()
 
         for card in range(sevens):
             self.player.draw_card_from_blind()
@@ -642,8 +645,8 @@ class Bridge:
                     self.player.hand.cards_drawn.clear()
                     self.cycle_playerlist()
                 else:
-                    eights += 1
                     self.cycle_playerlist()
+                    eights += 1
                 leap += 1
 
         if aces:
@@ -722,9 +725,16 @@ class Bridge:
                     f'  {self.number_of_games:2d} -{self.number_of_rounds:2d}{7 * " "}')
                 for player in list:
                     f.write(" {:4d}    ".format(player.score))
-                f.write('\n')
+                f.write(f'{(deck.shufflings - 1) * "  *"}\n')
         self.show_scores()
         self.set_shuffler()
+
+        # Shuffler must be set to playerlist[0]
+
+
+
+
+
         if self.shuffler.score <= 125:
             print(f'\n  {13 * " "}{self.shuffler.name} will start next round\n')
             print(f'{21 * " "}| next (r)ound |\n')
@@ -779,7 +789,7 @@ class Bridge:
         else:
             return False
 
-    def next_player_is_possible(self):
+    def is_next_player_possible(self):
 
         if self.check_if_bridge():
             self.finish_round()
@@ -794,7 +804,7 @@ class Bridge:
                   f'\n{7 * " "}|            SPACE: show scores            |')
             # keyboard.wait('space')
             self.finish_round()
-            return False
+            return True
 
         elif deck.get_top_card_from_stack().rank == 'J':
 
@@ -866,7 +876,7 @@ class Bridge:
 
             if self.player.is_robot:
 
-                while not self.next_player_is_possible():
+                while not self.is_next_player_possible():
                     while self.player.hand.possible_cards:
                         self.player.play_card()
                         self.player.hand.get_possible_cards()
@@ -893,6 +903,9 @@ class Bridge:
                 if key == 'ctrl+6':
                     for suit in suits:
                         self.player.hand.cards.append(Card(suit, '6'))
+                if key == 'ctrl+7':
+                    for suit in suits:
+                        self.player.hand.cards.append(Card(suit, '7'))
                 if key == 'ctrl+8':
                     for suit in suits:
                         self.player.hand.cards.append(Card(suit, '8'))
@@ -916,7 +929,7 @@ class Bridge:
                 elif key == 'shift':
                     self.player.play_card()
                 elif key == 'space':
-                    if self.next_player_is_possible():
+                    if self.is_next_player_possible():
                         self.activate_next_player()
 
 
