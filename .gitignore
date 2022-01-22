@@ -1,6 +1,11 @@
 /GameOfBridge.iml
 /keyboard/
+/build/
+/dist/
 /.idea/
 .gitignore
+*.txt
+Test*
+__*
 *.txt
 Test*
