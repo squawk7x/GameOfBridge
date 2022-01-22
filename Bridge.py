@@ -130,6 +130,8 @@ jchoice = Jchoice()
 class Deck:
     # Represents a card deck with a blind and a stack
 
+    is_visible = False
+
     def __init__(self):
         self.blind = []
         self.stack = []
@@ -144,9 +146,9 @@ class Deck:
 
     # deck methods
     def show(self):
-        self.show_blind(visible=True)
+        self.show_blind(self.is_visible)
         self.show_bridge_monitor()
-        self.show_stack(visible=True)
+        self.show_stack(self.is_visible)
 
     # blind methods
     def show_blind(self, visible=True):
@@ -246,6 +248,19 @@ class Handdeck:
             points += card.value
         return points
 
+    def arrange_hand_cards(self, pattern=0):
+        patterns = (('J', '9', '7', '8', '10', 'Q', 'K', 'A', '6'),
+                    ('J', 'A', 'K', 'Q', '10', '9', '8', '7', '6'),
+                    ('9', '8', '7', '6', '10', 'Q', 'K', 'A', 'J'))
+
+        sorted_cards = []
+
+        for rank in patterns[pattern]:
+            for card in self.cards:
+                if card.rank == rank:
+                    sorted_cards.append(card)
+        self.cards = sorted_cards
+
     def remove_card_from_cards(self, c: Card):
         if self.cards:
             for card in self.cards:
@@ -305,6 +320,13 @@ class Handdeck:
                         self.possible_cards.append(card)
         return self.possible_cards
 
+    def toggle_possible_cards(self):
+        if self.possible_cards:
+            card = self.possible_cards.pop()
+            self.cards.remove(card)
+            self.cards.insert(0, card)
+            self.possible_cards.insert(0, card)
+
 
 class Player:
     ''' Represents a player with cards in hand '''
@@ -336,25 +358,12 @@ class Player:
         for card in range(5):
             self.hand.cards.append(deck.blind.pop())
 
-    def arrange_hand_cards(self, pattern=0):
-        patterns = (('J', '9', '7', '8', '10', 'Q', 'K', 'A', '6'),
-                    ('J', 'A', 'K', 'Q', '10', '9', '8', '7', '6'),
-                    ('9', '8', '7', '6', '10', 'Q', 'K', 'A', 'J'))
-
-        sorted_cards = []
-
-        for rank in patterns[pattern]:
-            for card in self.hand.cards:
-                if card.rank == rank:
-                    sorted_cards.append(card)
-        self.hand.cards = sorted_cards
-
     def show(self):
         self.show_possible_cards()
         self.show_hand(True)
 
     def show_hand(self, visible=False):
-        self.arrange_hand_cards()
+        self.hand.arrange_hand_cards()
         cards = ''
         for card in self.hand.cards:
             if visible:
@@ -377,20 +386,13 @@ class Player:
             f' and can play ({len(self.hand.possible_cards)}) card(s):')
         print(cards)
 
-    def toggle_possible_cards(self):
-        if self.hand.possible_cards:
-            card = self.hand.possible_cards.pop()
-            self.hand.cards.remove(card)
-            self.hand.cards.insert(0, card)
-            self.hand.possible_cards.insert(0, card)
-
     def draw_card_from_blind(self, cards=1):
         for card in range(cards):
             card = deck.card_from_blind()
             self.hand.cards.append(card)
             self.hand.cards_drawn.append(card)
 
-    def must_draw_card(self):
+    def is_must_draw_card(self):
 
         '''
         must draw card, if:
@@ -433,6 +435,14 @@ class Player:
 
     def is_robot(self):
         return self.is_robot
+
+    def auto_play(self):
+        while self.hand.possible_cards:
+            self.play_card()
+            self.hand.get_possible_cards()
+        while self.is_must_draw_card():
+            self.draw_card_from_blind()
+            self.hand.get_possible_cards()
 
 
 class Bridge:
@@ -659,7 +669,7 @@ class Bridge:
 
     def show_full_deck(self):
         print(f'\n{84 * "-"}')
-        self.show_other_players(self.player)
+        self.show_all_players(deck.is_visible)
 
         deck.show()
         self.player.show()
@@ -691,37 +701,39 @@ class Bridge:
             f'{7 * " "}|              TAB:  toggle                |\n'
             f'{7 * " "}|            SPACE: set suit               |')
 
-    def show_other_players(self, player: Player):
-        for p in self.player_list:
-            if p != player:
-                p.show_hand(visible=True)
+    def show_all_players(self, is_visible=False):
+        for player in sorted(self.player_list, key=lambda p: p.name):
+            if player == self.player:
+                player.show_hand(True)
+            else:
+                player.show_hand(is_visible)
 
     def finish_round(self):
         if deck.get_top_card_from_stack().rank == 'J':
             self.player.score -= 20 * len(deck.bridge_monitor) * deck.shufflings
-        self.activate_next_player()  # cards_played of last round
+        self.activate_next_player()  # evaluate cards_played of last round
         print('\n')
         for player in self.player_list:
             player.score += player.hand.count_points() * deck.shufflings
             if player.score == 125:
                 player.score = 0
-            player.show_hand(True)
+        #    player.show_hand(True)
+        self.show_all_players(True)
 
-        list = sorted(self.player_list, key=lambda player: player.name)
         try:
             f = open(f'{date.today()}_scores.txt')
         except IOError:
             f = open(f'{date.today()}_scores.txt', 'a')
-            f.write(f'\n\nGame - Round   ')
-            for player in list:
+            f.write(f'\n\n{9 * " "}Game - Round   ')
+            for player in sorted(self.player_list, key=lambda p: p.name):
                 f.write(f'{player.name} ')
             f.write('\n')
         finally:
             f.close()
             with open(f'{date.today()}_scores.txt', 'a') as f:
                 f.write(
-                    f'  {self.number_of_games:2d} -{self.number_of_rounds:2d}{7 * " "}')
-                for player in list:
+                    f'{11 * " "}{self.number_of_games:2d} -{self.number_of_rounds:2d}{7 * " "}')
+                for player in sorted(self.player_list, key=lambda p: p.name):
                     f.write(" {:4d}    ".format(player.score))
                 f.write(f'{6 * " "}{(deck.shufflings - 1) * "*"}\n')
 
@@ -731,8 +743,8 @@ class Bridge:
 
         if self.shuffler.score <= 125:
             print(f'\n  {13 * " "}{self.shuffler.name} will start next round\n')
-            print(f'{21 * " "}| next (r)ound |\n')
-            keyboard.wait('r')
+            print(f'{21 * " "}|     SPACE    |\n')
+            keyboard.wait('space')
             self.start_round()
         else:
             print(f'\n{6 * " "}The Winner is ...\n')
@@ -748,7 +760,7 @@ class Bridge:
             with open(f'{date.today()}_scores.txt') as f:
                 print(f.read())
         except IOError:
-            print(f'\n\nPlaying 1st round - No score list availabe yet\n')
+            print(f'\n\n{6 * " "}Playing 1st round - No score list availabe yet\n')
 
     def check_if_bridge(self):
         if len(deck.bridge_monitor) == 4:
@@ -773,7 +785,7 @@ class Bridge:
                     keyboard.wait('space')
                     return True
             else:
-                print(f'{24 * " "}| Y | N |\n')
+                print(f'{22 * " "}|  Y  |  N  |\n')
                 key = keyboard.read_hotkey(suppress=False)
             if key == 'n':
                 deck.bridge_monitor.clear()
@@ -830,54 +842,16 @@ class Bridge:
             else:
                 return False
 
-    def wait_for_keyboard(self):
-
-        key = keyboard.read_hotkey(suppress=False)
-
-        # Testing:
-        if key == 'r':
-            self.start_round()
-        if key == 'c':
-            self.player.hand.cards.clear()
-        if key == '6':
-            for suit in suits:
-                self.player.hand.cards.append(Card(suit, '6'))
-        if key == '8':
-            for suit in suits:
-                self.player.hand.cards.append(Card(suit, '8'))
-        if key == 'j':
-            for suit in suits:
-                self.player.hand.cards.append(Card(suit, 'J'))
-        if key == 'a':
-            for suit in suits:
-                self.player.hand.cards.append(Card(suit, 'A'))
-        # End Testing
-
-        if key == 's':
-            self.show_scores()
-
-        if key == 'space':
-            return key
-
     def play(self):
 
         self.start_game()
 
         while True:
-
             self.show_full_deck()
 
             if self.player.is_robot:
-
                 while not self.is_next_player_possible():
-                    while self.player.hand.possible_cards:
-                        self.player.play_card()
-                        self.player.hand.get_possible_cards()
-
-                    while self.player.must_draw_card():
-                        self.player.draw_card_from_blind()
-                        self.player.hand.get_possible_cards()
-
+                    self.player.auto_play()
                 key = keyboard.read_hotkey(suppress=False)
                 if key == 'space':
                     self.activate_next_player()
@@ -885,45 +859,50 @@ class Bridge:
             else:
                 key = keyboard.read_hotkey(suppress=False)
 
-                if key == 'r':
-                    self.print_the_rules_of_the_game()
-                    print(f"{6 * ' '}press 'ESC' to continue the game")
-                    keyboard.wait('escape')
-                if key == 'ctrl+c':
-                    self.player.hand.cards.clear()
-                if key == 'ctrl+t':
-                    self.start_round()
-                if key == 'ctrl+6':
-                    for suit in suits:
-                        self.player.hand.cards.append(Card(suit, '6'))
-                if key == 'ctrl+7':
-                    for suit in suits:
-                        self.player.hand.cards.append(Card(suit, '7'))
-                if key == 'ctrl+8':
-                    for suit in suits:
-                        self.player.hand.cards.append(Card(suit, '8'))
-                if key == 'ctrl+j':
-                    for suit in suits:
-                        self.player.hand.cards.append(Card(suit, 'J'))
-                if key == 'ctrl+a':
-                    for suit in suits:
-                        self.player.hand.cards.append(Card(suit, 'A'))
-                if key == 'q':
-                    break
-                elif key == 's':
-                    self.show_scores()
-                    print(f'{8 * " "}press (ESC) to continue the game\n')
-                    keyboard.wait('escape')
-                elif key == 'tab':
-                    self.player.toggle_possible_cards()
-                elif key == 'alt':
-                    if self.player.must_draw_card():
-                        self.player.draw_card_from_blind()
+                if key == 'tab':
+                    self.player.hand.toggle_possible_cards()
                 elif key == 'shift':
                     self.player.play_card()
-                elif key == 'space':
-                    if self.is_next_player_possible():
-                        self.activate_next_player()
+                elif key == 'alt' and self.player.is_must_draw_card():
+                    self.player.draw_card_from_blind()
+                elif key == 'space' and self.is_next_player_possible():
+                    self.activate_next_player()
+
+                elif key == 's':
+                    self.show_scores()
+                    print(f'{21 * " "}|     SPACE    |\n')
+                    keyboard.wait('space')
+                elif key == 'r':
+                    self.print_the_rules_of_the_game()
+                    print(f'{21 * " "}|     SPACE    |\n')
+                    keyboard.wait('space')
+                elif key == 'q':
+                    break
+
+                elif key == 'ctrl+v':
+                    if deck.is_visible:
+                        deck.is_visible = False
+                    else:
+                        deck.is_visible = True
+                elif key == 'ctrl+c':
+                    self.player.hand.cards.clear()
+                elif key == 'ctrl+t':
+                    self.start_round()
+                elif key == 'ctrl+6':
+                    for suit in suits:
+                        self.player.hand.cards.append(Card(suit, '6'))
+                elif key == 'ctrl+7':
+                    for suit in suits:
+                        self.player.hand.cards.append(Card(suit, '7'))
+                elif key == 'ctrl+8':
+                    for suit in suits:
+                        self.player.hand.cards.append(Card(suit, '8'))
+                elif key == 'ctrl+j':
+                    for suit in suits:
+                        self.player.hand.cards.append(Card(suit, 'J'))
+                elif key == 'ctrl+a':
+                    for suit in suits:
+                        self.player.hand.cards.append(Card(suit, 'A'))
 
 
 if __name__ == "__main__":
