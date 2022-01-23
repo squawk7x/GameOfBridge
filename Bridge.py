@@ -581,6 +581,7 @@ class Bridge:
         self.number_of_rounds += 1
         self.player = self.set_shuffler()
         self.player.play_card(is_initial_card=True)
+        self.play()
 
     def set_shuffler(self):
 
@@ -605,6 +606,8 @@ class Bridge:
         eights = 0
         aces = 0
         key = 'n'
+
+        self.show_full_deck()  #
 
         for card in deck.cards_played:
             if card.rank == '7':
@@ -844,13 +847,11 @@ class Bridge:
 
     def play(self):
 
-        self.start_game()
-
         while True:
             self.show_full_deck()
 
             if self.player.is_robot:
-                while not self.is_next_player_possible():
+                while not self.is_next_player_possible() or self.player.hand.possible_cards:
                     self.player.auto_play()
                 key = keyboard.read_hotkey(suppress=False)
                 if key == 'space':
@@ -886,8 +887,9 @@ class Bridge:
                         deck.is_visible = True
                 elif key == 'ctrl+c':
                     self.player.hand.cards.clear()
-                elif key == 'ctrl+t':
+                elif key == 'ctrl+r':
                     self.start_round()
+
                 elif key == 'ctrl+6':
                     for suit in suits:
                         self.player.hand.cards.append(Card(suit, '6'))
@@ -906,6 +908,7 @@ class Bridge:
 
 
 if __name__ == "__main__":
+
     parser = argparse.ArgumentParser("Bridge", description=Bridge.print_the_rules_of_the_game(None))
     parser.add_argument("--number_of_players", "-p", type=int, choices=[2, 3, 4], help="number of players")
     parser.add_argument("--is_robot_game", "-r", type=bool, choices=[True], help="play against robots")
@@ -916,4 +919,4 @@ if __name__ == "__main__":
         parser.exit()
 
     bridge = Bridge(args.number_of_players, args.is_robot_game)
-    bridge.play()
+    bridge.start_game()
