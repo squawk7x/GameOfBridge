@@ -3,10 +3,14 @@
 
 import argparse
 import os
+import pickle
 import random
 from datetime import date
 
 import keyboard
+
+import gameclient
+import gameserver
 
 suits = ['\u2666', '\u2665', '\u2660', '\u2663']
 ranks = ['6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
@@ -453,6 +457,7 @@ class Bridge:
     number_of_games = 0
     shuffler = None
     is_robot_game = None
+    is_server_on = False
 
     def __init__(self, number_of_players: int, is_robot_game: bool):
 
@@ -585,7 +590,7 @@ class Bridge:
 
     def set_shuffler(self):
 
-        if self.shuffler == None:
+        if self.shuffler is None:
             self.shuffler = self.player_list[0]
         else:
             # self.shuffler = (sorted(self.player_list, key=lambda player: player.score)).pop()
@@ -598,7 +603,7 @@ class Bridge:
     def cycle_playerlist(self):
         self.player_list.append(self.player_list.pop(0))
         self.player = self.player_list[0]
-        # self.player.hand.cards_drawn.clear()
+
 
     def activate_next_player(self):
 
@@ -607,7 +612,12 @@ class Bridge:
         aces = 0
         key = 'n'
 
-        self.show_full_deck()  #
+        self.show_full_deck()
+
+        if self.is_server_on:
+            deck_cards_played_b = pickle.dumps(deck.cards_played)
+            gameserver.gameserver.set_transfer_data(deck_cards_played_b)
+            deck.cards_played = pickle.loads(gameclient.gameclient.exchange_data(deck_cards_played_b))
 
         for card in deck.cards_played:
             if card.rank == '7':
@@ -738,7 +748,7 @@ class Bridge:
                     f'{11 * " "}{self.number_of_games:2d} -{self.number_of_rounds:2d}{7 * " "}')
                 for player in sorted(self.player_list, key=lambda p: p.name):
                     f.write(" {:4d}    ".format(player.score))
-                f.write(f'{6 * " "}{(deck.shufflings - 1) * "*"}\n')
+                f.write(f'{4 * " "}{(deck.shufflings - 1) * " *"}\n')
 
         self.show_scores()
 
@@ -889,6 +899,14 @@ class Bridge:
                     self.player.hand.cards.clear()
                 elif key == 'ctrl+r':
                     self.start_round()
+
+                elif key == 'ctrl+s':
+                    if not self.is_server_on:
+                        os.system("python3 gameserver.py&")
+                        self.is_server_on = True
+                    else:
+                        gameserver.gameserver.stop()
+                        self.is_server_on = False
 
                 elif key == 'ctrl+6':
                     for suit in suits:
