@@ -367,7 +367,8 @@ class Player:
         self.show_hand(True)
 
     def show_hand(self, visible=False):
-        self.hand.arrange_hand_cards()
+        if self.is_robot:
+           self.hand.arrange_hand_cards()
         cards = ''
         for card in self.hand.cards:
             if visible:
@@ -425,6 +426,8 @@ class Player:
             return False
 
     def play_card(self, is_initial_card=False):
+        if not self.is_robot:
+            self.hand.arrange_hand_cards()
         if is_initial_card:
             card = self.hand.cards.pop()
             deck.put_card_on_stack(card)
@@ -441,6 +444,7 @@ class Player:
         return self.is_robot
 
     def auto_play(self):
+        #self.hand.arrange_hand_cards()
         while self.hand.possible_cards:
             self.play_card()
             self.hand.get_possible_cards()
@@ -784,6 +788,8 @@ class Bridge:
 
             if self.player.is_robot:
                 key = random.choice(['n', 'y'])
+                if self.player.hand.count_points() == 0:
+                    key = 'y'
                 if key == 'n':
                     print(f'{22 * " "}{self.player.name} says:')
                     print(f"{16 * ' '}Let's continue this round")
