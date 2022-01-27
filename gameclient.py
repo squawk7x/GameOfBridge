@@ -4,22 +4,29 @@ import socket
 
 class Gameclient():
 
-    def exchange_data(self, cdata=b'client data'):
-        host = '127.0.0.1'
-        port = 54321
-
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as csock:
-            csock.connect((host, port))
-            csock.sendall(cdata)
-            print('Client said client data sent:\n', cdata)
-            data = csock.recv(1024)
-            print('Client said server data received:\n', data)
-
-        return data
-
+	host = '127.0.0.1'
+	port = 54321
+	
+	def upload_to_server(self, cdata=b'client data'):
+		
+		with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as csock:
+			csock.connect((self.host, self.port))
+			csock.sendall(cdata)
+			print(f'[Client] upload to server:\n', cdata)
+	
+	def download_from_server(self):
+		
+		with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as csock:
+			csock.connect((self.host, self.port))
+			csock.send(b'request')
+			cdata = csock.recv(1024)
+			print(f'[Client] download from server:\n', cdata)
+			return cdata
+		
 
 gameclient = Gameclient()
 
 if __name__ == "__main__":
-    gameclient.exchange_data()
-
+	gameclient.upload_to_server()
+	gameclient.download_from_server()
+	
