@@ -395,6 +395,8 @@ class Player:
 			card = deck.card_from_blind()
 			self.hand.cards.append(card)
 			self.hand.cards_drawn.append(card)
+		if bridge.is_server_on:
+			bridge.store_gamestatus()
 	
 	def is_must_draw_card(self):
 		
@@ -435,6 +437,8 @@ class Player:
 			self.hand.cards.remove(card)
 			deck.put_card_on_stack(card)
 			jchoice.clear_j()
+		if bridge.is_server_on:
+			bridge.store_gamestatus()
 	
 	def set_robot(self, is_robot=False):
 		self.is_robot = is_robot
@@ -590,7 +594,10 @@ class Bridge:
 		self.player = self.set_shuffler()
 		self.player.play_card(is_initial_card=True)
 		self.play()
-	
+		
+		if self.is_server_on:
+			self.store_gamestatus()
+
 	def set_shuffler(self):
 		
 		if self.shuffler is None:
@@ -678,10 +685,12 @@ class Bridge:
 				leap += 1
 		
 		if self.is_server_on:
-			# Client upload to server:
-			deck_b = pickle.dumps(deck)
-			gameclient.gameclient.upload_to_server(deck_b)
-			
+			# Client/Player upload to server:
+			self.store_gamestatus()
+	
+	def store_gamestatus(self):
+		deck_dict = pickle.dumps(deck.__dict__)
+		gameclient.gameclient.upload_to_server(deck_dict)
 	
 	def show_full_deck(self):
 		print(f'\n{84 * "-"}')
@@ -694,6 +703,8 @@ class Bridge:
 			f'\n{7 * " "}| TAB: toggle |  SHIFT: put  |  ALT: draw  |'
 			f'\n{7 * " "}|            SPACE: next Player            |'
 			f'\n{7 * " "}|  (s)cores   |   (r)ules    |   (q)uit    |')
+		if self.is_server_on:
+			print(f'{17 * " "} You are playing online')
 	
 	def make_choice_for_J(self):
 		if self.player.is_robot:
@@ -831,7 +842,7 @@ class Bridge:
 			# keyboard.wait('space')    n
 			self.finish_round()
 			return True
-		
+		 
 		elif deck.get_top_card_from_stack().rank == 'J':
 			
 			if deck.cards_played:
@@ -863,16 +874,18 @@ class Bridge:
 			else:
 				return False
 	
+	def retrieve_gamestatus(self):
+		deck_from_server = pickle.loads(gameclient.gameclient.download_from_server())
+		deck.__dict__ = deck_from_server
+	
 	def play(self):
 		
 		while True:
 			
 			if self.is_server_on:
-				deck_from_server = pickle.loads(gameclient.gameclient.download_from_server())
-				deck.blind = deck_from_server.blind
+				self.retrieve_gamestatus()
 			
 			self.show_full_deck()
-			print('Server status: ', self.is_server_on)
 			
 			if self.player.is_robot:
 				while not self.is_next_player_possible() or self.player.hand.possible_cards:
@@ -919,12 +932,11 @@ class Bridge:
 						os.system("python3 gameserver.py&")
 						self.is_server_on = True
 						keyboard.wait('space')
-						deck_b = pickle.dumps(deck)
-						gameclient.gameclient.upload_to_server(deck_b)
+						self.store_gamestatus()
 					else:
 						gameserver.gameserver.stop()
 						self.is_server_on = False
-					
+				
 				elif key == 'ctrl+6':
 					for suit in suits:
 						self.player.hand.cards.append(Card(suit, '6'))

@@ -12,7 +12,7 @@ class Gameclient():
 		with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as csock:
 			csock.connect((self.host, self.port))
 			csock.sendall(cdata)
-			print(f'[Client] upload to server:\n', cdata)
+			#print(f'[Client] upload to server:\n', cdata)
 	
 	def download_from_server(self):
 		
@@ -20,7 +20,7 @@ class Gameclient():
 			csock.connect((self.host, self.port))
 			csock.send(b'request')
 			cdata = csock.recv(1024)
-			print(f'[Client] download from server:\n', cdata)
+			#print(f'[Client] download from server:\n', cdata)
 			return cdata
 		
 
