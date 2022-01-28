@@ -10,6 +10,8 @@ class Server():
 	def __init__(self, host='0.0.0.0', port=54321):
 		self.host = host
 		self.port = port
+		self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
 	
 	def handler(self, c, a):
 		while True:

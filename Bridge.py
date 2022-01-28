@@ -395,7 +395,7 @@ class Player:
 			self.hand.cards.append(card)
 			self.hand.cards_drawn.append(card)
 		if bridge.is_server_on:
-			bridge.store_gamestatus()
+			bridge.upload_gamestatus()
 	
 	def is_must_draw_card(self):
 		
@@ -437,7 +437,7 @@ class Player:
 			deck.put_card_on_stack(card)
 			jchoice.clear_j()
 		if bridge.is_server_on:
-			bridge.store_gamestatus()
+			bridge.upload_gamestatus()
 	
 	def set_robot(self, is_robot=False):
 		self.is_robot = is_robot
@@ -597,7 +597,7 @@ class Bridge:
 		self.play()
 		
 		if self.is_server_on:
-			self.store_gamestatus()
+			self.upload_gamestatus()
 
 	def set_shuffler(self):
 		
@@ -687,12 +687,12 @@ class Bridge:
 		
 		if self.is_server_on:
 			# Client/Player upload to server:
-			self.store_gamestatus()
+			self.upload_gamestatus()
 	
-	def store_gamestatus(self):
+	def upload_gamestatus(self):
 		if self.is_server_on:
 			deck_dict = pickle.dumps(deck.__dict__)
-			#client.exchange(deck_dict)
+			client.upload_data(deck_dict)
 	
 	def show_full_deck(self):
 		print(f'\n{84 * "-"}')
@@ -881,9 +881,8 @@ class Bridge:
 				return False
 	
 	def retrieve_gamestatus(self):
-		pass
-		#deck_from_server = pickle.loads(client.exchange(b'download'))
-		#deck.__dict__ = deck_from_server
+		deck_from_server = pickle.loads(client.deliver_data())
+		deck.__dict__ = deck_from_server
 	
 	def play(self):
 		
@@ -949,6 +948,7 @@ class Bridge:
 						cg_thread.daemon = True
 						cg_thread.start()
 						self.is_client_on = True
+						
 					else:
 						client.stop()
 						self.is_client_on = False
@@ -981,8 +981,8 @@ if __name__ == "__main__":
 		parser.print_help()
 		parser.exit()
 		
-	server = chat_server.Server()
-	client = chat_client.Client()
+	server = game_server.Server()
+	client = game_client.Client()
 	
 	bridge = Bridge(args.number_of_players, args.is_robot_game)
 	bridge.start_game()
