@@ -21,10 +21,10 @@ class Gameserver():
 		
 		if sdata and sdata != b'request':
 			self.sdata = sdata
-			#print('[Server] received from client:\n', self.sdata)
+			print('[Server] received from client:\n', self.sdata)
 		elif sdata == b'request':
 			conn.sendall(self.sdata)
-			#print('[Server] sent to client:\n', self.sdata)
+			print('[Server] sent to client:\n', self.sdata)
 		
 		self.sel.unregister(conn)
 		print('[Server] unregister client\n', conn)

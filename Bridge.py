@@ -6,11 +6,10 @@ import os
 import pickle
 import random
 from datetime import date
-
 import keyboard
-
-import gameclient
-import gameserver
+import threading
+import game_server
+import game_client
 
 suits = ['\u2666', '\u2665', '\u2660', '\u2663']
 ranks = ['6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
@@ -456,6 +455,7 @@ class Player:
 			self.hand.get_possible_cards()
 
 
+
 class Bridge:
 	player = None
 	number_of_players = 0
@@ -465,6 +465,7 @@ class Bridge:
 	shuffler = None
 	is_robot_game = None
 	is_server_on = False
+	is_client_on = False
 	
 	def __init__(self, number_of_players: int, is_robot_game: bool):
 		
@@ -689,8 +690,9 @@ class Bridge:
 			self.store_gamestatus()
 	
 	def store_gamestatus(self):
-		deck_dict = pickle.dumps(deck.__dict__)
-		gameclient.gameclient.upload_to_server(deck_dict)
+		if self.is_server_on:
+			deck_dict = pickle.dumps(deck.__dict__)
+			#client.exchange(deck_dict)
 	
 	def show_full_deck(self):
 		print(f'\n{84 * "-"}')
@@ -704,7 +706,11 @@ class Bridge:
 			f'\n{7 * " "}|            SPACE: next Player            |'
 			f'\n{7 * " "}|  (s)cores   |   (r)ules    |   (q)uit    |')
 		if self.is_server_on:
-			print(f'{17 * " "} You are playing online')
+			print(f'{21 * " "}| Server is on |')
+			server.show_connections()
+		if self.is_client_on:
+			print(f'{21 * " "}|you are online|')
+		
 	
 	def make_choice_for_J(self):
 		if self.player.is_robot:
@@ -875,15 +881,17 @@ class Bridge:
 				return False
 	
 	def retrieve_gamestatus(self):
-		deck_from_server = pickle.loads(gameclient.gameclient.download_from_server())
-		deck.__dict__ = deck_from_server
+		pass
+		#deck_from_server = pickle.loads(client.exchange(b'download'))
+		#deck.__dict__ = deck_from_server
 	
 	def play(self):
 		
 		while True:
 			
 			if self.is_server_on:
-				self.retrieve_gamestatus()
+				pass
+				#client.exchange(b'download')
 			
 			self.show_full_deck()
 			
@@ -922,21 +930,29 @@ class Bridge:
 						deck.is_visible = False
 					else:
 						deck.is_visible = True
-				elif key == 'ctrl+c':
-					self.player.hand.cards.clear()
 				elif key == 'ctrl+r':
 					self.start_round()
 				
 				elif key == 'ctrl+s':
 					if not self.is_server_on:
-						os.system("python3 gameserver.py&")
+						sg_thread = threading.Thread(target=server.run)
+						sg_thread.daemon = True
+						sg_thread.start()
 						self.is_server_on = True
-						keyboard.wait('space')
-						self.store_gamestatus()
 					else:
-						gameserver.gameserver.stop()
+						server.stop()
 						self.is_server_on = False
-				
+						
+				elif key == 'ctrl+w':
+					if not self.is_client_on:
+						cg_thread = threading.Thread(target=client.run)
+						cg_thread.daemon = True
+						cg_thread.start()
+						self.is_client_on = True
+					else:
+						client.stop()
+						self.is_client_on = False
+					
 				elif key == 'ctrl+6':
 					for suit in suits:
 						self.player.hand.cards.append(Card(suit, '6'))
@@ -964,6 +980,9 @@ if __name__ == "__main__":
 	except AttributeError:
 		parser.print_help()
 		parser.exit()
+		
+	server = chat_server.Server()
+	client = chat_client.Client()
 	
 	bridge = Bridge(args.number_of_players, args.is_robot_game)
 	bridge.start_game()
