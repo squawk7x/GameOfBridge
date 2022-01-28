@@ -889,8 +889,7 @@ class Bridge:
 		while True:
 			
 			if self.is_server_on:
-				pass
-				#client.exchange(b'download')
+				client.deliver_data()
 			
 			self.show_full_deck()
 			

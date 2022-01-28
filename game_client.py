@@ -20,18 +20,16 @@ class Client():
 		while True:
 			data = self.sock.recv(1024)
 			self.game_data = data
-			print(data)
+			#print('received data', data)
 			if not data:
 				break
 	
 	def deliver_data(self):
-		print('deliver data:\n', self.game_data)
+		#print('deliver data:\n', self.game_data)
 		return self.game_data
 	
-	# def exchange(self):
-	# 	self.sock.send(bytes(input(""), 'utf-8'))
-	def upload_data(self, data):
-		print('upload data:\n', data)
+	def upload_data(self, data=b''):
+		#print('upload data:\n', data)
 		self.sock.send(data)
 		
 	def stop(self):
