@@ -5,11 +5,13 @@ import argparse
 import os
 import pickle
 import random
-from datetime import date
-import keyboard
 import threading
-import game_server
+from datetime import date
+
+import keyboard
+
 import game_client
+import game_server
 
 suits = ['\u2666', '\u2665', '\u2660', '\u2663']
 ranks = ['6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
@@ -584,15 +586,18 @@ class Bridge:
 		self.start_round()
 	
 	def start_round(self):
-		deck.__init__()
-		
-		for player in self.player_list:
-			player.draw_new_cards()
-		
-		self.number_of_rounds += 1
-		self.player = self.set_shuffler()
-		self.player.play_card(is_initial_card=True)
-		self.play()
+		if not self.is_online:
+			deck.__init__()
+			
+			for player in self.player_list:
+				player.draw_new_cards()
+			
+			self.number_of_rounds += 1
+			self.player = self.set_shuffler()
+			self.player.play_card(is_initial_card=True)
+			self.play()
+		else:
+			self.pull_data_from_server()
 	
 	def set_shuffler(self):
 		
@@ -617,7 +622,8 @@ class Bridge:
 		aces = 0
 		key = 'n'
 		
-		self.pull_data_from_server()
+		if self.is_online:
+			self.pull_data_from_server()
 		
 		self.show_full_deck()
 		
@@ -687,7 +693,7 @@ class Bridge:
 			self.push_data_to_server()
 	
 	def show_full_deck(self):
-		print(f'\n{84 * "-"}')
+		print(f'\n{84 * "-"}\n')
 		self.show_all_players(deck.is_visible)
 		
 		deck.show()
@@ -697,11 +703,10 @@ class Bridge:
 			f'\n{7 * " "}| TAB: toggle |  SHIFT: put  |  ALT: draw  |'
 			f'\n{7 * " "}|            SPACE: next Player            |'
 			f'\n{7 * " "}|  (s)cores   |   (r)ules    |   (q)uit    |')
-	
+		
 		if self.is_online:
 			print(f'{7 * " "}| ------------ you are online ------------ |')
 			server.show_connections()
-	
 	
 	def make_choice_for_J(self):
 		if self.player.is_robot:
@@ -836,7 +841,7 @@ class Bridge:
 		
 		elif not self.player.hand.cards:
 			self.show_full_deck()
-			#print(f'\n\n{7 * " "}| * * * {self.player.name} has won this round! * * * |\n')
+			# print(f'\n\n{7 * " "}| * * * {self.player.name} has won this round! * * * |\n')
 			# keyboard.wait('space')
 			self.finish_round()
 			return True
@@ -880,7 +885,7 @@ class Bridge:
 	
 	def stop_server(self):
 		server.stop()
-		
+	
 	def start_client(self):
 		cg_thread = threading.Thread(target=client.run)
 		cg_thread.daemon = True
@@ -895,7 +900,7 @@ class Bridge:
 			self.start_client()
 		self.push_data_to_server()
 		self.is_online = True
-		
+	
 	def stop_online(self):
 		self.stop_client()
 		self.stop_server()
@@ -910,7 +915,6 @@ class Bridge:
 		data_from_server = pickle.loads(client.deliver_data())
 		deck.__dict__ = data_from_server[0]
 		self.__dict__ = data_from_server[1]
-		
 	
 	def play(self):
 		
@@ -983,9 +987,10 @@ class Bridge:
 				elif key == 'ctrl+a':
 					for suit in suits:
 						self.player.hand.cards.append(Card(suit, 'A'))
-			
-			# if self.is_online:
-			# 	self.push_data_to_server()
+		
+		# if self.is_online:
+		# 	self.push_data_to_server()
+
 
 if __name__ == "__main__":
 	
@@ -997,9 +1002,17 @@ if __name__ == "__main__":
 	except AttributeError:
 		parser.print_help()
 		parser.exit()
-		
+	
 	server = game_server.Server()
 	client = game_client.Client()
 	
 	bridge = Bridge(args.number_of_players, args.is_robot_game)
+	
+	# try:
+	# 	bridge.start_client()
+	# except ConnectionRefusedError:
+	# 	bridge.is_online = False
+	# else:
+	# 	bridge.is_online = True
+	
 	bridge.start_game()
