@@ -15,9 +15,9 @@ class Server():
 	
 	def handler(self, c, a):
 		while True:
-			data = c.recv(1024)
+			data = c.recv(2048)
 			for connection in self.connections:
-				connection.send(data)
+				connection.sendall(data)
 			if not data:
 				print(f'{str(a[0])}:{str(a[1])} disconnected')
 				self.connections.remove(c)
@@ -31,7 +31,7 @@ class Server():
 	def run(self):
 		self.sock.bind((self.host, self.port))
 		self.sock.listen(1)
-		print(f'[{str(self.host)}:{str(self.port)}] Server waiting for connections...')
+		print(f'[{str(self.host)}:{str(self.port)}] Server is waiting for connections...')
 		
 		while True:
 			c, a = self.sock.accept()

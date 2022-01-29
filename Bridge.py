@@ -394,8 +394,8 @@ class Player:
 			card = deck.card_from_blind()
 			self.hand.cards.append(card)
 			self.hand.cards_drawn.append(card)
-		if bridge.is_server_on:
-			bridge.upload_gamestatus()
+		if bridge.is_online:
+			bridge.push_data_to_server()
 	
 	def is_must_draw_card(self):
 		
@@ -436,8 +436,8 @@ class Player:
 			self.hand.cards.remove(card)
 			deck.put_card_on_stack(card)
 			jchoice.clear_j()
-		if bridge.is_server_on:
-			bridge.upload_gamestatus()
+		if bridge.is_online:
+			bridge.push_data_to_server()
 	
 	def set_robot(self, is_robot=False):
 		self.is_robot = is_robot
@@ -464,8 +464,7 @@ class Bridge:
 	number_of_games = 0
 	shuffler = None
 	is_robot_game = None
-	is_server_on = False
-	is_client_on = False
+	is_online = False
 	
 	def __init__(self, number_of_players: int, is_robot_game: bool):
 		
@@ -595,10 +594,7 @@ class Bridge:
 		self.player = self.set_shuffler()
 		self.player.play_card(is_initial_card=True)
 		self.play()
-		
-		if self.is_server_on:
-			self.upload_gamestatus()
-
+	
 	def set_shuffler(self):
 		
 		if self.shuffler is None:
@@ -685,14 +681,9 @@ class Bridge:
 					aces += 1
 				leap += 1
 		
-		if self.is_server_on:
+		if self.is_online:
 			# Client/Player upload to server:
-			self.upload_gamestatus()
-	
-	def upload_gamestatus(self):
-		if self.is_server_on:
-			deck_dict = pickle.dumps(deck.__dict__)
-			client.upload_data(deck_dict)
+			self.push_data_to_server()
 	
 	def show_full_deck(self):
 		print(f'\n{84 * "-"}')
@@ -705,12 +696,11 @@ class Bridge:
 			f'\n{7 * " "}| TAB: toggle |  SHIFT: put  |  ALT: draw  |'
 			f'\n{7 * " "}|            SPACE: next Player            |'
 			f'\n{7 * " "}|  (s)cores   |   (r)ules    |   (q)uit    |')
-		if self.is_server_on:
-			print(f'{21 * " "}| Server is on |')
-			server.show_connections()
-		if self.is_client_on:
+	
+		if self.is_online:
 			print(f'{21 * " "}|you are online|')
-		
+			server.show_connections()
+	
 	
 	def make_choice_for_J(self):
 		if self.player.is_robot:
@@ -845,10 +835,10 @@ class Bridge:
 		elif not self.player.hand.cards:
 			self.show_full_deck()
 			print(f'\n\n{7 * " "}| * * * {self.player.name} has won this round! * * * |\n')
-			# keyboard.wait('space')    n
+			# keyboard.wait('space')
 			self.finish_round()
 			return True
-		 
+		
 		elif deck.get_top_card_from_stack().rank == 'J':
 			
 			if deck.cards_played:
@@ -880,16 +870,55 @@ class Bridge:
 			else:
 				return False
 	
-	def retrieve_gamestatus(self):
-		deck_from_server = pickle.loads(client.deliver_data())
-		deck.__dict__ = deck_from_server
+	def start_server(self):
+		if not self.is_online:
+			sg_thread = threading.Thread(target=server.run)
+			sg_thread.daemon = True
+			sg_thread.start()
+	
+	def stop_server(self):
+		server.stop()
+		
+	def start_client(self):
+		cg_thread = threading.Thread(target=client.run)
+		cg_thread.daemon = True
+		cg_thread.start()
+	
+	def stop_client(self):
+		client.stop()
+	
+	def start_online(self):
+		if not self.is_online:
+			self.start_server()
+			self.start_client()
+		self.push_data_to_server()
+		self.is_online = True
+		
+	def stop_online(self):
+		self.stop_client()
+		self.stop_server()
+		self.is_online = False
+	
+	def push_data_to_server(self):
+		if self.is_online:
+			data_to_server = pickle.dumps((deck.__dict__, self.__dict__))
+			client.upload_data(data_to_server)
+	
+	def pull_data_from_server(self):
+		data_from_server = pickle.loads(client.deliver_data())
+		deck.__dict__ = data_from_server[0]
+		self.__dict__ = data_from_server[1]
+		
 	
 	def play(self):
 		
 		while True:
 			
-			if self.is_server_on:
-				client.deliver_data()
+			if self.is_online:
+				try:
+					self.pull_data_from_server()
+				except EOFError:
+					self.push_data_to_server()
 			
 			self.show_full_deck()
 			
@@ -931,27 +960,12 @@ class Bridge:
 				elif key == 'ctrl+r':
 					self.start_round()
 				
-				elif key == 'ctrl+s':
-					if not self.is_server_on:
-						sg_thread = threading.Thread(target=server.run)
-						sg_thread.daemon = True
-						sg_thread.start()
-						self.is_server_on = True
+				elif key == 'ctrl+o':
+					if not self.is_online:
+						self.start_online()
 					else:
-						server.stop()
-						self.is_server_on = False
-						
-				elif key == 'ctrl+w':
-					if not self.is_client_on:
-						cg_thread = threading.Thread(target=client.run)
-						cg_thread.daemon = True
-						cg_thread.start()
-						self.is_client_on = True
-						
-					else:
-						client.stop()
-						self.is_client_on = False
-					
+						self.stop_online()
+				
 				elif key == 'ctrl+6':
 					for suit in suits:
 						self.player.hand.cards.append(Card(suit, '6'))
@@ -967,7 +981,9 @@ class Bridge:
 				elif key == 'ctrl+a':
 					for suit in suits:
 						self.player.hand.cards.append(Card(suit, 'A'))
-
+			
+			# if self.is_online:
+			# 	self.push_data_to_server()
 
 if __name__ == "__main__":
 	

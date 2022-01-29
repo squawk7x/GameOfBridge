@@ -7,30 +7,28 @@ class Client():
 	sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	game_data = b''
 	
-	def __init__(self, host='127.0.0.1'):
+	def __init__(self, host='127.0.0.1', port=54321):
 		self.host = host
+		self.port = port
 		self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 	
 	def run(self):
-		self.sock.connect((self.host, 54321))
+		self.sock.connect((self.host, self.port))
 		c_thread = threading.Thread(target=self.upload_data)
 		c_thread.daemon = True
 		c_thread.start()
 		
 		while True:
-			data = self.sock.recv(1024)
+			data = self.sock.recv(2048)
 			self.game_data = data
-			#print('received data', data)
 			if not data:
 				break
 	
 	def deliver_data(self):
-		#print('deliver data:\n', self.game_data)
 		return self.game_data
 	
 	def upload_data(self, data=b''):
-		#print('upload data:\n', data)
-		self.sock.send(data)
+		self.sock.sendall(data)
 		
 	def stop(self):
 		self.sock.close()
