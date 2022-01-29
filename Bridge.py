@@ -455,7 +455,6 @@ class Player:
 			self.hand.get_possible_cards()
 
 
-
 class Bridge:
 	player = None
 	number_of_players = 0
@@ -618,6 +617,8 @@ class Bridge:
 		aces = 0
 		key = 'n'
 		
+		self.pull_data_from_server()
+		
 		self.show_full_deck()
 		
 		for card in deck.cards_played:
@@ -698,7 +699,7 @@ class Bridge:
 			f'\n{7 * " "}|  (s)cores   |   (r)ules    |   (q)uit    |')
 	
 		if self.is_online:
-			print(f'{21 * " "}|you are online|')
+			print(f'{7 * " "}| ------------ you are online ------------ |')
 			server.show_connections()
 	
 	
@@ -717,12 +718,12 @@ class Bridge:
 				if jkey == 'space':
 					break
 	
-	def show_jcoice(self):
-		print(f'\n{20 * " "}\u2191\u2191')
-		jchoice.show_js()
-		print(
-			f'{7 * " "}|              TAB:  toggle                |\n'
-			f'{7 * " "}|            SPACE: set suit               |')
+	# def show_jcoice(self):
+	# 	print(f'\n{20 * " "}\u2191\u2191')
+	# 	jchoice.show_js()
+	# 	print(
+	# 		f'{7 * " "}|              TAB:  toggle                |\n'
+	# 		f'{7 * " "}|            SPACE: set suit               |')
 	
 	def show_all_players(self, is_visible=False):
 		for player in sorted(self.player_list, key=lambda p: p.name):
@@ -734,6 +735,7 @@ class Bridge:
 	def finish_round(self):
 		if deck.get_top_card_from_stack().rank == 'J':
 			self.player.score -= 20 * len(deck.bridge_monitor) * deck.shufflings
+		print(f'\n\n{7 * " "}| * * * {self.player.name} has won this round! * * * |\n')
 		self.activate_next_player()  # evaluate cards_played of last round
 		print('\n')
 		for player in self.player_list:
@@ -834,7 +836,7 @@ class Bridge:
 		
 		elif not self.player.hand.cards:
 			self.show_full_deck()
-			print(f'\n\n{7 * " "}| * * * {self.player.name} has won this round! * * * |\n')
+			#print(f'\n\n{7 * " "}| * * * {self.player.name} has won this round! * * * |\n')
 			# keyboard.wait('space')
 			self.finish_round()
 			return True
@@ -914,11 +916,11 @@ class Bridge:
 		
 		while True:
 			
-			if self.is_online:
-				try:
-					self.pull_data_from_server()
-				except EOFError:
-					self.push_data_to_server()
+			# if self.is_online:
+			# 	try:
+			# 		self.pull_data_from_server()
+			# 	except EOFError:
+			# 		self.push_data_to_server()
 			
 			self.show_full_deck()
 			

@@ -15,7 +15,7 @@ class Server():
 	
 	def handler(self, c, a):
 		while True:
-			data = c.recv(2048)
+			data = c.recv(3072)
 			for connection in self.connections:
 				connection.sendall(data)
 			if not data:

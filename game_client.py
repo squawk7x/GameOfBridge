@@ -19,7 +19,7 @@ class Client():
 		c_thread.start()
 		
 		while True:
-			data = self.sock.recv(2048)
+			data = self.sock.recv(3072)
 			self.game_data = data
 			if not data:
 				break
