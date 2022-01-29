@@ -573,17 +573,20 @@ class Bridge:
 		print(the_rules_of_the_game)
 	
 	def start_game(self):
-		self.number_of_games += 1
-		self.number_of_rounds = 0
-		
-		self.player_list.clear()
-		
-		for player in range(self.number_of_players):
-			self.player_list.append(Player(f'Player-{player + 1}', self.is_robot_game))
-		
-		self.player_list[0].is_robot = False  # at least one player must be 'human'
-		
-		self.start_round()
+		if not self.is_online:
+			self.number_of_games += 1
+			self.number_of_rounds = 0
+			
+			self.player_list.clear()
+			
+			for player in range(self.number_of_players):
+				self.player_list.append(Player(f'Player-{player + 1}', self.is_robot_game))
+			
+			self.player_list[0].is_robot = False
+			
+			self.start_round()
+		else:
+			self.pull_data_from_server()
 	
 	def start_round(self):
 		if not self.is_online:
@@ -723,13 +726,6 @@ class Bridge:
 				if jkey == 'space':
 					break
 	
-	# def show_jcoice(self):
-	# 	print(f'\n{20 * " "}\u2191\u2191')
-	# 	jchoice.show_js()
-	# 	print(
-	# 		f'{7 * " "}|              TAB:  toggle                |\n'
-	# 		f'{7 * " "}|            SPACE: set suit               |')
-	
 	def show_all_players(self, is_visible=False):
 		for player in sorted(self.player_list, key=lambda p: p.name):
 			if player == self.player:
@@ -747,7 +743,6 @@ class Bridge:
 			player.score += player.hand.count_points() * deck.shufflings
 			if player.score == 125:
 				player.score = 0
-		#    player.show_hand(True)
 		self.show_all_players(True)
 		
 		try:
@@ -841,8 +836,8 @@ class Bridge:
 		
 		elif not self.player.hand.cards:
 			self.show_full_deck()
-			# print(f'\n\n{7 * " "}| * * * {self.player.name} has won this round! * * * |\n')
-			# keyboard.wait('space')
+			print(f'\n\n{7 * " "}| * * * {self.player.name} has won this round! * * * |\n')
+			keyboard.wait('space')
 			self.finish_round()
 			return True
 		
@@ -920,12 +915,6 @@ class Bridge:
 		
 		while True:
 			
-			# if self.is_online:
-			# 	try:
-			# 		self.pull_data_from_server()
-			# 	except EOFError:
-			# 		self.push_data_to_server()
-			
 			self.show_full_deck()
 			
 			if self.player.is_robot:
@@ -988,9 +977,6 @@ class Bridge:
 					for suit in suits:
 						self.player.hand.cards.append(Card(suit, 'A'))
 		
-		# if self.is_online:
-		# 	self.push_data_to_server()
-
 
 if __name__ == "__main__":
 	
