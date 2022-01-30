@@ -465,6 +465,8 @@ class Bridge:
 	number_of_games = 0
 	shuffler = None
 	is_robot_game = None
+	is_server = False
+	is_client = False
 	is_online = False
 	
 	def __init__(self, number_of_players: int, is_robot_game: bool):
@@ -573,7 +575,10 @@ class Bridge:
 		print(the_rules_of_the_game)
 	
 	def start_game(self):
-		if not self.is_online:
+		
+		
+		if self.is_server or not self.is_online:
+			
 			self.number_of_games += 1
 			self.number_of_rounds = 0
 			
@@ -589,18 +594,21 @@ class Bridge:
 			self.pull_data_from_server()
 	
 	def start_round(self):
-		if not self.is_online:
+		
+		self.number_of_rounds += 1
+		
+		if self.is_server or not self.is_online:
 			deck.__init__()
 			
 			for player in self.player_list:
 				player.draw_new_cards()
 			
-			self.number_of_rounds += 1
 			self.player = self.set_shuffler()
 			self.player.play_card(is_initial_card=True)
 			self.play()
+		
 		else:
-			self.pull_data_from_server()
+		 	self.pull_data_from_server()
 	
 	def set_shuffler(self):
 		
@@ -873,33 +881,42 @@ class Bridge:
 				return False
 	
 	def start_server(self):
-		if not self.is_online:
+		if not self.is_server:
 			sg_thread = threading.Thread(target=server.run)
 			sg_thread.daemon = True
 			sg_thread.start()
+			self.is_server = True
 	
 	def stop_server(self):
-		server.stop()
+		if self.is_server:
+			server.stop()
+			self.is_server = False
 	
 	def start_client(self):
-		cg_thread = threading.Thread(target=client.run)
-		cg_thread.daemon = True
-		cg_thread.start()
+		if not self.is_client:
+			cg_thread = threading.Thread(target=client.run)
+			cg_thread.daemon = True
+			cg_thread.start()
+			self.is_client = True
 	
 	def stop_client(self):
-		client.stop()
+		if self.is_client:
+			client.stop()
+			self.is_client = False
 	
 	def start_online(self):
 		if not self.is_online:
 			self.start_server()
 			self.start_client()
+			self.is_online = True
 		self.push_data_to_server()
-		self.is_online = True
+		
 	
 	def stop_online(self):
-		self.stop_client()
-		self.stop_server()
-		self.is_online = False
+		if self.is_online:
+			self.stop_client()
+			self.stop_server()
+			self.is_online = False
 	
 	def push_data_to_server(self):
 		if self.is_online:
@@ -960,6 +977,15 @@ class Bridge:
 						self.start_online()
 					else:
 						self.stop_online()
+						
+				elif key == 'ctrl+p':
+					if not self.is_client:
+						self.start_client()
+						self.is_online = True
+					else:
+						if not self.is_server:
+							self.stop_client()
+							self.is_client = False
 				
 				elif key == 'ctrl+6':
 					for suit in suits:
@@ -993,12 +1019,4 @@ if __name__ == "__main__":
 	client = game_client.Client()
 	
 	bridge = Bridge(args.number_of_players, args.is_robot_game)
-	
-	# try:
-	# 	bridge.start_client()
-	# except ConnectionRefusedError:
-	# 	bridge.is_online = False
-	# else:
-	# 	bridge.is_online = True
-	
 	bridge.start_game()
