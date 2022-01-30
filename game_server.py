@@ -10,11 +10,10 @@ class Server():
 		self.host = host
 		self.port = port
 		self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-
 	
 	def handler(self, c, a):
 		while True:
-			data = c.recv(3072)
+			data = c.recv(4096)
 			for connection in self.connections:
 				connection.sendall(data)
 			if not data:
@@ -41,8 +40,11 @@ class Server():
 			print(f'{str(a[0])}:{str(a[1])} connected')
 	
 	def stop(self):
+		for connection in self.connections:
+			self.connections.remove(connection)
+			connection.close()
 		self.sock.close()
-
+		
 
 if __name__ == "__main__":
 

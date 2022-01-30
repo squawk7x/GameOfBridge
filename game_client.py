@@ -1,7 +1,7 @@
 import socket
 import sys
 import threading
-
+import Bridge
 
 class Client():
 	sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -23,6 +23,20 @@ class Client():
 			self.game_data = data
 			if not data:
 				break
+		
+		# while True:
+		# 	data = self.sock.recv(4096)
+		# 	self.game_data = data
+		#
+		# 	data_from_server = pickle.loads(client.deliver_data())
+		# 	deck.__dict__ = data_from_server[0]
+		# 	self.__dict__ = data_from_server[1]
+		# 	bridge.player_list[0].__dict__ = data_from_server[2]
+		# 	bridge.player_list[1].__dict__ = data_from_server[3]
+		# 	bridge.player_list[2].__dict__ = data_from_server[4]
+		#
+		# 	if not data:
+		# 		break
 	
 	def deliver_data(self):
 		return self.game_data
