@@ -37,7 +37,10 @@ class Client():
 			data = self.sock.recv(4096)
 			self.game_data = data
 			
-			data_from_server = pickle.loads(client.deliver_data())
+			#data_from_server = pickle.loads(client.deliver_data())
+			if data:
+				data_from_server = pickle.loads(data)
+				self.game_data = data
 			deck.__dict__ = data_from_server[0]
 			self.__dict__ = data_from_server[1]
 			bridge.player_list[0].__dict__ = data_from_server[2]
@@ -624,8 +627,8 @@ class Bridge:
 			
 			self.start_round()
 		else:
-			pass
-		# self.pull_data_from_server()
+			#pass
+			self.pull_data_from_server()
 	
 	def start_round(self):
 		
@@ -642,8 +645,8 @@ class Bridge:
 			self.play()
 		
 		else:
-			pass
-		# self.pull_data_from_server()
+			#pass
+			self.pull_data_from_server()
 	
 	def set_shuffler(self):
 		
@@ -669,7 +672,8 @@ class Bridge:
 		key = 'n'
 		
 		if self.is_client and self.is_online:
-			self.pull_data_from_server()
+			pass
+			#self.pull_data_from_server()
 		
 		self.show_full_deck()
 		
@@ -942,19 +946,21 @@ class Bridge:
 	
 	def start_online(self):
 		if not self.is_online:
-			if not self.is_server:
-				self.start_server()
-			if not self.is_client:
-				self.start_client()
 			self.is_online = True
-		# self.push_data_to_server()
+			self.push_data_to_server()
+		# if not self.is_online:
+		# 	if not self.is_server:
+		# 		self.start_server()
+		# 	if not self.is_client:
+		# 		self.start_client()
+		# 	self.is_online = True
 	
 	def stop_online(self):
 		if self.is_online:
-			if self.is_client:
-				self.stop_client()
-			if self.is_server:
-				self.stop_server()
+			# if self.is_client:
+			# 	self.stop_client()
+			# if self.is_server:
+			# 	self.stop_server()
 			self.is_online = False
 	
 	def push_data_to_server(self):
@@ -1020,15 +1026,16 @@ class Bridge:
 					self.start_round()
 					
 					'''
-					Client  Server  Server available    Online
-					   1       1        1                  1
-					   1       1        0                  0
-					   1       0        1                  1
-					   1       0        0                  0
-					   0       1        1                  0
-					   0       1        0                  0
-					   0       0        1                  0
-					   0       0        0                  0
+					  is      is     Server
+					Client  Server  available    Online
+					   1       1        1          1
+					   1       1        0          0
+					   1       0        1          1
+					   1       0        0          0
+					   0       1        1          0
+					   0       1        0          0
+					   0       0        1          0
+					   0       0        0          0
 					
 					->
 					if is_client and is_server_available   1
