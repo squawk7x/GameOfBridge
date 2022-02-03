@@ -1094,3 +1094,4 @@ if __name__ == "__main__":
 	
 	bridge = Bridge(args.number_of_players, args.is_robot_game)
 	bridge.start_game()
+	
