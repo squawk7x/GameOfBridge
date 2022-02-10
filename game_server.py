@@ -5,6 +5,7 @@ import threading
 class Server():
 	sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	connections = []
+	nicknames = []
 	
 	def __init__(self, host='0.0.0.0', port=54321):
 		self.host = host
@@ -17,7 +18,7 @@ class Server():
 			
 			for connection in self.connections:
 				connection.sendall(data)
-				
+			
 			if not data:
 				print(f'{str(a[0])}:{str(a[1])} disconnected')
 				self.connections.remove(c)
@@ -35,10 +36,12 @@ class Server():
 		      f'Server is waiting for connections...')
 		
 		while True:
-			c, a = self.sock.accept()
+			conn, address = self.sock.accept()
+			print("Connected with {}".format(str(address)))
+			
 			s_thread = threading.Thread(name='Server-Thread',
-			                            target=self.handler, args=(c, a),
-			                            daemon=True)
+			                            target=self.handler,
+			                            args=(conn, address), daemon=True)
 			s_thread.start()
 			self.connections.append(c)
 			print(f'{str(a[0])}:{str(a[1])} connected')
@@ -50,6 +53,8 @@ class Server():
 		self.sock.close()
 
 
+server = Server()
+
 if __name__ == "__main__":
-	server = Server()
+	
 	server.run()
