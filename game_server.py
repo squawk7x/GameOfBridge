@@ -14,8 +14,10 @@ class Server():
 	def handler(self, c, a):
 		while True:
 			data = c.recv(4096)
+			
 			for connection in self.connections:
 				connection.sendall(data)
+				
 			if not data:
 				print(f'{str(a[0])}:{str(a[1])} disconnected')
 				self.connections.remove(c)
@@ -26,15 +28,17 @@ class Server():
 		for connection in self.connections:
 			print(connection)
 	
-	def run(self):
+	def start(self):
 		self.sock.bind((self.host, self.port))
 		self.sock.listen(1)
-		print(f'[{str(self.host)}:{str(self.port)}] Server is waiting for connections...')
+		print(f'[{str(self.host)}:{str(self.port)}] '
+		      f'Server is waiting for connections...')
 		
 		while True:
 			c, a = self.sock.accept()
-			s_thread = threading.Thread(target=self.handler, args=(c, a))
-			s_thread.daemon = True
+			s_thread = threading.Thread(name='Server-Thread',
+			                            target=self.handler, args=(c, a),
+			                            daemon=True)
 			s_thread.start()
 			self.connections.append(c)
 			print(f'{str(a[0])}:{str(a[1])} connected')
@@ -44,9 +48,8 @@ class Server():
 			self.connections.remove(connection)
 			connection.close()
 		self.sock.close()
-		
+
 
 if __name__ == "__main__":
-
 	server = Server()
 	server.run()

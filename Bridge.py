@@ -27,25 +27,23 @@ class Client():
 		self.port = port
 		self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 	
-	def run(self):
+	def start(self):
 		self.sock.connect((self.host, self.port))
-		c_thread = threading.Thread(target=self.upload_data)
-		c_thread.daemon = True
+		c_thread = threading.Thread(target=self.upload_data, daemon=True)
 		c_thread.start()
 		
 		while True:
 			data = self.sock.recv(4096)
 			self.game_data = data
 			
-			#data_from_server = pickle.loads(client.deliver_data())
 			if data:
 				data_from_server = pickle.loads(data)
 				self.game_data = data
-			deck.__dict__ = data_from_server[0]
-			self.__dict__ = data_from_server[1]
-			bridge.player_list[0].__dict__ = data_from_server[2]
-			bridge.player_list[1].__dict__ = data_from_server[3]
-			bridge.player_list[2].__dict__ = data_from_server[4]
+				deck.__dict__ = data_from_server[0]
+				self.__dict__ = data_from_server[1]
+				bridge.player_list[0].__dict__ = data_from_server[2]
+				bridge.player_list[1].__dict__ = data_from_server[3]
+				bridge.player_list[2].__dict__ = data_from_server[4]
 			
 			if not data:
 				break
@@ -137,8 +135,8 @@ class Jchoice:
 	j = None
 	
 	def __init__(self):
-		self.js = [Jsuit('\u2666', '\033[95m'), Jsuit('\u2665', '\033[91m'), Jsuit('\u2660', '\033[93m'),
-		           Jsuit('\u2663', '\033[94m')]
+		self.js = [Jsuit('\u2666', '\033[95m'), Jsuit('\u2665', '\033[91m'),
+		           Jsuit('\u2660', '\033[93m'), Jsuit('\u2663', '\033[94m')]
 	
 	def toggle_js(self):
 		self.js.insert(0, self.js.pop())
@@ -234,7 +232,8 @@ class Deck:
 					stack += '## '
 				stack = f'{self.show_cards_played()}' + stack
 			else:
-				for card in range(len(self.stack) - len(self.cards_played) - 1):
+				for card in range(
+						len(self.stack) - len(self.cards_played) - 1):
 					stack += '## '
 				stack = str(self.stack[-1]) + stack
 		
@@ -413,7 +412,8 @@ class Player:
 			else:
 				cards += '## '
 		if visible:
-			print(f'{self.name} holds ({len(self.hand.cards)}) card(s) [{self.hand.count_points():2d} points]:')
+			print(f'{self.name} holds ({len(self.hand.cards)}) card(s) '
+			      f'[{self.hand.count_points():2d} points]:')
 		else:
 			print(f'{self.name} holds ({len(self.hand.cards)}) card(s):')
 		print(cards)
@@ -423,9 +423,9 @@ class Player:
 		self.hand.get_possible_cards()
 		for card in self.hand.possible_cards:
 			cards += str(card)
-		print(
-			f'{self.name} has played ({len(deck.cards_played)}) card(s) / drawn ({len(self.hand.cards_drawn)}) card(s)'
-			f' and can play ({len(self.hand.possible_cards)}) card(s):')
+		print(f'{self.name} has played ({len(deck.cards_played)}) card(s) / '
+		      f'drawn ({len(self.hand.cards_drawn)}) card(s)'
+		      f' and can play ({len(self.hand.possible_cards)}) card(s):')
 		print(cards)
 	
 	def draw_card_from_blind(self, cards=1):
@@ -532,10 +532,13 @@ class Bridge:
 					robot = keyboard.read_hotkey(suppress=False)
 					if robot == 'n':
 						self.is_robot_game = False
-						print(f'\nYou play all {self.number_of_players - 1} players yourself')
+						print(f'\nYou play all {self.number_of_players - 1} '
+						      f'players yourself')
 					elif robot == 'y':
 						self.is_robot_game = True
-						print(f'\nYou play against {self.number_of_players - 1} robot(s)!')
+						print(
+							f'\nYou play against {self.number_of_players - 1} '
+							f'robot(s)!')
 					else:
 						continue
 				except ValueError:
@@ -555,38 +558,46 @@ class Bridge:
 	def print_the_rules_of_the_game(self):
 		
 		the_rules_of_the_game = f'''
+		
         {30 * " "}Game of Bridge
 
         Rules Of The Game:
         ------------------
-        Bridge is played with 36 cards (4 suits and ranks from 6 to Ace) by 2-4 players.
-        Each player starts with 5 cards. The first player puts a card onto the stack
-        and can add more cards with same rank. The next player can play first card either
-        same suit or same rank and can play more cards with same rank. At first the cards on hand
-        must be used and at least 1 card must be played. If the player does not have a suitable 
-        card - a card must be drawn from blind and the next player continues the round.
-        No more than one card can be drawn from blind, except a '6' on the stack must be covered.
+        Bridge is played with 36 cards (4 suits and ranks from 6 to Ace)
+        by 2-4 players. Each player starts with 5 cards. The first player
+        puts a card onto the stack and can add more cards with same rank.
+        The next player can play first card either same suit or same rank
+        and can play more cards with same rank. At first the cards on hand
+        must be used and at least 1 card must be played. If the player
+        does not have a suitable card - a card must be drawn from blind
+        and the next player continues the round. No more than one card can
+         be drawn from blind, except a '6' on the stack must be covered.
 
         Special Cards:
         --------------
-        6   must be covered by same player, may be by drawing cards from blind
-            until the '6' is covered by a different rank.
+        6   must be covered by same player, may be by drawing cards from
+            blind until the '6' is covered by a different rank.
         7   next player must draw 1 card from blind
-        8   the next player must draw 2 cards and will be passed over. When multiple '8'
-            were played either next player must draw 2 for each '8' on stack and will be 
-            passed over - or the following players must draw 2 cards and will be passed over
-        J   can be played to any suit and player can choose which suit must follow
-        A   next player will be passed over. 
-            With multiple 'A' the next players will be passed over
+        8   the next player must draw 2 cards and will be passed over.
+            When multiple '8' were played either next player must draw
+            2 for each '8' on stack and will be passed over - or the
+            following players must draw 2 cards and will be passed over
+        J   can be played to any suit and player can choose which suit
+            must follow
+        A   next player will be passed over. With multiple 'A' the next
+            players will be passed over
 
         Special Rule 'Bridge':
         ----------------------
-        If there are the same 4 cards in a row on the stack, the player of the 4th card can choose 
-        whether or not to finish the actual round.
+        If there are the same 4 cards in a row on the stack, the playe
+        of the 4th card can choose whether or not to finish the actual
+        round.
 
         Counting:
         ---------
-        A round is over when one player has no more cards. The players note their points. 
+        A round is over when one player has no more cards.
+        The players note their points.
+        
         These are the card values:
          6: 0
          7: 0
@@ -599,14 +610,15 @@ class Bridge:
          A: 15
 
         The points of several rounds will be added.
-        If a player finishes a round with a 'J' his score will be reduced
-        by 20 for each 'J' on stack of his last move.
+        If a player finishes a round with a 'J' his score will be
+        reduced by 20 for each 'J' on stack of his last move.
         If a player reaches exactly 125 points, his score is back on 0!
         When the blind was empty and therefor the stack was reshuffeled,
         the points of this round are doubled (trippled, ...).
         The player with the highest score starts the next round.
 
         The game is over once a player reaches more than 125 points.
+        
         '''
 		
 		print(the_rules_of_the_game)
@@ -621,13 +633,14 @@ class Bridge:
 			self.player_list.clear()
 			
 			for player in range(self.number_of_players):
-				self.player_list.append(Player(f'Player-{player + 1}', self.is_robot_game))
+				self.player_list.append(
+					Player(f'Player-{player + 1}', self.is_robot_game))
 			
 			self.player_list[0].is_robot = False
 			
 			self.start_round()
 		else:
-			#pass
+			# pass
 			self.pull_data_from_server()
 	
 	def start_round(self):
@@ -645,7 +658,7 @@ class Bridge:
 			self.play()
 		
 		else:
-			#pass
+			# pass
 			self.pull_data_from_server()
 	
 	def set_shuffler(self):
@@ -653,9 +666,9 @@ class Bridge:
 		if self.shuffler is None:
 			self.shuffler = self.player_list[0]
 		else:
-			# self.shuffler = (sorted(self.player_list, key=lambda player: player.score)).pop()
 			self.shuffler = max(self.player_list)
-			while self.shuffler != self.player_list[0]:  # Shuffler must be set to playerlist[0]
+			while self.shuffler != self.player_list[
+				0]:  # Shuffler must be set to playerlist[0]
 				self.cycle_playerlist()
 		
 		return self.shuffler
@@ -672,8 +685,7 @@ class Bridge:
 		key = 'n'
 		
 		if self.is_client and self.is_online:
-			pass
-			#self.pull_data_from_server()
+			pass  # self.pull_data_from_server()
 		
 		self.show_full_deck()
 		
@@ -747,15 +759,14 @@ class Bridge:
 		
 		deck.show()
 		self.player.show()
-		print(
-			f'\n'
-			f'\n{7 * " "}| TAB: toggle |  SHIFT: put  |  ALT: draw  |'
-			f'\n{7 * " "}|            SPACE: next Player            |'
-			f'\n{7 * " "}|  (s)cores   |   (r)ules    |   (q)uit    |')
+		print(f'\n'
+		      f'\n{7 * " "}| TAB: toggle |  SHIFT: put  |  ALT: draw  |'
+		      f'\n{7 * " "}|            SPACE: next Player            |'
+		      f'\n{7 * " "}|  (s)cores   |   (r)ules    |   (q)uit    |')
 		
 		if self.is_client or self.is_server or self.is_online or True:
-			print(
-				f'{7 * " "}|  client {self.is_client:<4}|  server  {self.is_server:<4}|  online {self.is_online:<4}|\n')
+			print(f'{7 * " "}|  client {self.is_client:<4}|  '
+			      f'server  {self.is_server:<4}|  online {self.is_online:<4}|\n')
 			server.show_connections()
 	
 	def make_choice_for_J(self):
@@ -782,8 +793,10 @@ class Bridge:
 	
 	def finish_round(self):
 		if deck.get_top_card_from_stack().rank == 'J':
-			self.player.score -= 20 * len(deck.bridge_monitor) * deck.shufflings
-		print(f'\n\n{7 * " "}| * * * {self.player.name} has won this round! * * * |\n')
+			self.player.score -= 20 * len(
+				deck.bridge_monitor) * deck.shufflings
+		print(f'\n\n{7 * " "}| * * * {self.player.name} '
+		      f'has won this round! * * * |\n')
 		self.activate_next_player()  # evaluate cards_played of last round
 		print('\n')
 		for player in self.player_list:
@@ -803,8 +816,8 @@ class Bridge:
 		finally:
 			f.close()
 			with open(f'{date.today()}_scores.txt', 'a') as f:
-				f.write(
-					f'{11 * " "}{self.number_of_games:2d} -{self.number_of_rounds:2d}{7 * " "}')
+				f.write(f'{11 * " "}{self.number_of_games:2d} -'
+				        f'{self.number_of_rounds:2d}{7 * " "}')
 				for player in sorted(self.player_list, key=lambda p: p.name):
 					f.write(" {:4d}    ".format(player.score))
 				f.write(f'{4 * " "}{(deck.shufflings - 1) * " *"}\n')
@@ -814,14 +827,16 @@ class Bridge:
 		self.set_shuffler()
 		
 		if self.shuffler.score <= 125:
-			print(f'\n  {13 * " "}{self.shuffler.name} will start next round\n')
+			print(
+				f'\n  {13 * " "}{self.shuffler.name} will start next round\n')
 			print(f'{21 * " "}|     SPACE    |\n')
 			keyboard.wait('space')
 			self.start_round()
 		else:
 			print(f'\n{6 * " "}The Winner is ...\n')
 			print(f'{24 * " "}{min(self.player_list).name}\n')
-			# winner = sorted(self.player_list, key=lambda player: player.score, reverse=True).pop()
+			# winner = sorted(self.player_list,
+			# key=lambda player: player.score, reverse=True).pop()
 			print(f'{14 * " "}+ + + G A M E  O V E R + + + \n')
 			print(f'{21 * " "}| (n)ew game |\n')
 			keyboard.wait('n')
@@ -832,7 +847,8 @@ class Bridge:
 			with open(f'{date.today()}_scores.txt') as f:
 				print(f.read())
 		except IOError:
-			print(f'\n\n{6 * " "}Playing 1st round - No score list availabe yet\n')
+			print(f'\n\n{6 * " "}'
+			      f'Playing 1st round - No score list availabe yet\n')
 	
 	def check_if_bridge(self):
 		if len(deck.bridge_monitor) == 4:
@@ -883,7 +899,8 @@ class Bridge:
 		
 		elif not self.player.hand.cards:
 			self.show_full_deck()
-			print(f'\n\n{7 * " "}| * * * {self.player.name} has won this round! * * * |\n')
+			print(f'\n\n{7 * " "}'
+			      f'| * * * {self.player.name} has won this round! * * * |\n')
 			keyboard.wait('space')
 			self.finish_round()
 			return True
@@ -922,7 +939,7 @@ class Bridge:
 	def start_server(self):
 		
 		if not self.is_server:
-			sg_thread = threading.Thread(target=server.run)
+			sg_thread = threading.Thread(target=server.start)
 			sg_thread.daemon = True
 			sg_thread.start()
 			self.is_server = True
@@ -934,7 +951,7 @@ class Bridge:
 	
 	def start_client(self):
 		if not self.is_client:
-			cg_thread = threading.Thread(target=client.run)
+			cg_thread = threading.Thread(target=client.start)
 			cg_thread.daemon = True
 			cg_thread.start()
 			self.is_client = True
@@ -948,12 +965,13 @@ class Bridge:
 		if not self.is_online:
 			self.is_online = True
 			self.push_data_to_server()
-		# if not self.is_online:
-		# 	if not self.is_server:
-		# 		self.start_server()
-		# 	if not self.is_client:
-		# 		self.start_client()
-		# 	self.is_online = True
+	
+	# if not self.is_online:
+	# 	if not self.is_server:
+	# 		self.start_server()
+	# 	if not self.is_client:
+	# 		self.start_client()
+	# 	self.is_online = True
 	
 	def stop_online(self):
 		if self.is_online:
@@ -1079,9 +1097,13 @@ class Bridge:
 
 if __name__ == "__main__":
 	
-	parser = argparse.ArgumentParser("Bridge", description=Bridge.print_the_rules_of_the_game(None))
-	parser.add_argument("--number_of_players", "-p", type=int, choices=[2, 3, 4], help="number of players")
-	parser.add_argument("--is_robot_game", "-r", type=bool, choices=[True], help="play against robots")
+	parser = argparse.ArgumentParser("Bridge",
+	                                 description=Bridge.print_the_rules_of_the_game(
+		                                 None))
+	parser.add_argument("--number_of_players", "-p", type=int,
+	                    choices=[2, 3, 4], help="number of players")
+	parser.add_argument("--is_robot_game", "-r", type=bool, choices=[True],
+	                    help="play against robots")
 	try:
 		args = parser.parse_args()
 	except AttributeError:
@@ -1094,4 +1116,3 @@ if __name__ == "__main__":
 	
 	bridge = Bridge(args.number_of_players, args.is_robot_game)
 	bridge.start_game()
-	
