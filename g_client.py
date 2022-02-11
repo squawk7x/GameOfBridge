@@ -25,6 +25,7 @@ class G_Client:
 				break
 
 	def write(self, data=None):  # => Server.handle
+
 		if not data:
 			while self.is_active:
 				message = f'{self.nickname}: {input("")}'

@@ -21,7 +21,7 @@ class G_Server:
 	def add_client(self, client, nickname):
 		self.clients.append(client)
 		self.nicknames.append(nickname)
-		print(f"now online: {self.nicknames}")
+		print(f"--- now online: {self.nicknames} ---")
 
 	def get_nickname_of_client(self, client):
 		index = self.clients.index(client)
@@ -34,7 +34,7 @@ class G_Server:
 		self.nicknames.remove(nickname)
 		self.clients.remove(client)
 		client.close()
-		print(f"now online: {self.nicknames}")
+		print(f"--- now online: {self.nicknames} ---")
 
 	def handle(self, client):
 		while self.is_active:
@@ -52,11 +52,12 @@ class G_Server:
 					self.broadcast(message)
 
 			except Exception:
-				advice = f"--- admin: " \
+				advice = f"--- broadcast: " \
 				          f"{self.get_nickname_of_client(client)} " \
 				          f"not connected ---"
 				print(advice)
 				self.remove_client(client)
+				self.broadcast(advice.encode())
 				break
 
 
@@ -66,12 +67,12 @@ class G_Server:
 			client, address = self.server.accept()  # Waiting for new client
 			print("connected with {}".format(str(address)))
 
-			client.send("--- admin: you are connected to the server! ---\n"
+			client.send("--- you are connected to the server! ---\n"
 			               .encode())
 
 			nickname = client.recv(1024).decode()
 			self.add_client(client, nickname)
-			print("Nickname is {}".format(nickname))
+			print("nickname is {}".format(nickname))
 			self.broadcast(f"--- broadcast: {nickname} joined! ---"
 			               .encode())
 
@@ -79,7 +80,7 @@ class G_Server:
 			thread.start()
 
 	def run(self):
-		print("Server is listening... ")
+		print("server is listening... ")
 		self.receive()
 
 	def stop(self):
@@ -89,7 +90,7 @@ class G_Server:
 
 		self.is_active = False
 		self.server.close()
-		print("Server stopped")
+		print("server stopped")
 
 
 if __name__ == "__main__":

@@ -930,16 +930,18 @@ class Bridge:
 	'''
 
 	def push_data_to_server(self):
+
 		if self.gc:
 
-			# 	data = [deck.__dict__, self.__dict__]
+			#data = [deck.__dict__, self.__dict__]
+			# data = [deck.__dict__]
 			#
-			# 	for player in self.player_list:
-			# 		data.append(player.__dict__)
+			# for player in self.player_list:
+			# 	data.append(player.__dict__)
 			#
-			# 	bdata = pickle.dumps(data)
+			# bdata = pickle.dumps(data)
 			#
-			# 	self.gc.write(bdata)
+			# self.gc.write(bdata)
 
 			data = 'data'.encode()
 			self.gc.write(data)
