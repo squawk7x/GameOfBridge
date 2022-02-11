@@ -3,15 +3,13 @@
 
 import argparse
 import os
-import pickle
 import random
 import threading
 from datetime import date
 import keyboard
-import socket
-import g_client
 
-# import g_server
+import g_client
+import pickle
 
 suits = ['\u2666', '\u2665', '\u2660', '\u2663']
 ranks = ['6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
@@ -20,13 +18,13 @@ reset_color = '\033[0m'
 
 
 class Card:
-	
+
 	def __init__(self, suit, rank):
 		if suit in suits and rank in ranks:
 			self.suit = suit
 			self.rank = rank
 			self.value = self.set_value(self.rank)
-	
+
 	def __str__(self):
 		card = None
 		if self.suit == '\u2666':
@@ -38,25 +36,25 @@ class Card:
 		elif self.suit == '\u2663':
 			card = f'{suit_colors[3]}{self.suit}{self.rank}{reset_color} '
 		return card
-	
+
 	def __lt__(self, other):
 		if self.get_value() < other.get_value():
 			return True
 		else:
 			return False
-	
+
 	def __gt__(self, other):
 		if self.get_value() > other.get_value():
 			return True
 		else:
 			return False
-	
+
 	def get_suit(self):
 		return self.suit
-	
+
 	def get_rank(self):
 		return self.rank
-	
+
 	def set_value(self, rank):
 		value = 0
 		if rank in {'10', 'Q', 'K'}:
@@ -66,27 +64,27 @@ class Card:
 		if rank == 'J':
 			value = 20
 		return value
-	
+
 	def get_value(self):
 		return self.value
 
 
 class Jsuit:
-	
+
 	def __init__(self, suit, color):
 		self.suit = suit
 		self.color = color
-	
+
 	def __str__(self):
 		sign = f'{self.color}{self.suit}{self.suit}{reset_color} '
 		return sign
-	
+
 	def __eq__(self, other):
 		if self.suit == other.suit:
 			return True
 		else:
 			return False
-	
+
 	def get_suit(self):
 		return self.suit
 
@@ -94,33 +92,33 @@ class Jsuit:
 class Jchoice:
 	js = []  # array of suits for 'J'
 	j = None
-	
+
 	def __init__(self):
 		self.js = [Jsuit('\u2666', '\033[95m'), Jsuit('\u2665', '\033[91m'),
 		           Jsuit('\u2660', '\033[93m'), Jsuit('\u2663', '\033[94m')]
-	
+
 	def toggle_js(self):
 		self.js.insert(0, self.js.pop())
-	
+
 	def set_j(self, color=None):
 		if color:
 			self.j = self.js[color]
 		else:
 			self.j = self.js[-1]
-	
+
 	def clear_j(self):
 		self.j = None
-	
+
 	def get_j(self):
 		if self.j:
 			return self.j
 		else:
 			return ''
-	
+
 	def get_j_suit(self):
 		if self.j:
 			return self.j.suit
-	
+
 	def show_js(self):
 		js = ''
 		for j in self.js:
@@ -133,25 +131,25 @@ jchoice = Jchoice()
 
 class Deck:
 	is_visible = False
-	
+
 	def __init__(self):
 		self.blind = []
 		self.stack = []
 		self.cards_played = []
 		self.bridge_monitor = []
 		self.shufflings = 1
-		
+
 		for suit in suits:
 			for rank in ranks:
 				self.blind.append(Card(suit, rank))
 		self.shuffle_blind()
-	
+
 	# deck methods
 	def show(self):
 		self.show_blind(self.is_visible)
 		self.show_bridge_monitor()
 		self.show_stack(self.is_visible)
-	
+
 	# blind methods
 	def show_blind(self, visible=True):
 		blind = ''
@@ -162,10 +160,10 @@ class Deck:
 				blind += '## '
 		print(f'\n{20 * " "}Blind ({len(self.blind)}) card(s):')
 		print(f'{20 * " "}{blind}\n')
-	
+
 	def shuffle_blind(self):
 		random.shuffle(self.blind)
-	
+
 	def card_from_blind(self):
 		if len(self.blind) == 0:
 			self.blind = self.stack
@@ -178,15 +176,15 @@ class Deck:
 		else:
 			print('not enough cards available')
 			exit()
-	
+
 	# stack methods
 	def show_stack(self, visible=True):
 		stack = ''
-		
+
 		if visible:
 			for card in self.stack:
 				stack = str(card) + stack
-		
+
 		else:
 			if self.cards_played:
 				for card in range(len(self.stack) - len(self.cards_played)):
@@ -197,33 +195,33 @@ class Deck:
 						len(self.stack) - len(self.cards_played) - 1):
 					stack += '## '
 				stack = str(self.stack[-1]) + stack
-		
+
 		stack = f'{jchoice.get_j()}' + stack
 		print(f'{20 * " "}Stack ({len(self.stack)}) card(s):')
 		print(f'{20 * " "}{stack}\n')
-	
+
 	def put_card_on_stack(self, card):
 		self.stack.append(card)
 		self.cards_played.append(card)
 		self.update_bridge_monitor(card)
-	
+
 	def get_top_card_from_stack(self):
 		if self.stack:
 			return self.stack[-1]
-	
+
 	#  bridge monitor
 	def update_bridge_monitor(self, card: Card):
 		if deck.bridge_monitor and card.rank != deck.bridge_monitor[0].rank:
 			deck.bridge_monitor.clear()
 		deck.bridge_monitor.append(card)
-	
+
 	def show_bridge_monitor(self):
 		bridge = ''
 		for card in self.bridge_monitor:
 			bridge = str(card) + bridge
 		print(f'Bridge monitor ({len(self.bridge_monitor)}) card(s):')
 		print(f'{bridge}\n')
-	
+
 	def show_cards_played(self):
 		cards_played = ''
 		for card in self.cards_played:
@@ -235,51 +233,51 @@ deck = Deck()
 
 
 class Handdeck:
-	
+
 	def __init__(self):
 		self.cards = []
 		self.cards_drawn = []
 		self.possible_cards = []
-	
+
 	def __len__(self):
 		return len(self.cards)
-	
+
 	def count_points(self):
 		points = 0
 		for card in self.cards:
 			points += card.value
 		return points
-	
+
 	def arrange_hand_cards(self, pattern=0):
 		patterns = (('J', '9', '7', '8', '10', 'Q', 'K', 'A', '6'),
 		            ('J', 'A', 'K', 'Q', '10', '9', '8', '7', '6'),
 		            ('9', '8', '7', '6', '10', 'Q', 'K', 'A', 'J'))
-		
+
 		sorted_cards = []
-		
+
 		for rank in patterns[pattern]:
 			for card in self.cards:
 				if card.rank == rank:
 					sorted_cards.append(card)
 		self.cards = sorted_cards
-	
+
 	def remove_card_from_cards(self, c: Card):
 		if self.cards:
 			for card in self.cards:
 				if card.suit == c.suit and card.rank == c.rank:
 					self.cards.remove(card)
-	
+
 	def remove_card_from_possible_cards(self, c: Card):
 		if self.possible_cards:
 			for card in self.possible_cards:
 				if card.suit == c.suit and card.rank == c.rank:
 					self.possible_cards.remove(card)
-	
+
 	def get_possible_cards(self):
-		
+
 		self.possible_cards = []
 		stack_card = deck.get_top_card_from_stack()
-		
+
 		'''
 		1st move:
 		---------
@@ -321,7 +319,7 @@ class Handdeck:
 					if card.rank == stack_card.rank:
 						self.possible_cards.append(card)
 		return self.possible_cards
-	
+
 	def toggle_possible_cards(self):
 		if self.possible_cards:
 			card = self.possible_cards.pop()
@@ -335,34 +333,34 @@ class Player:
 	is_robot = False
 	hand = None
 	score = 0
-	
+
 	def __init__(self, name: str, is_robot: bool, nickname=None):
 		self.name = name
 		self.is_robot = is_robot
 		self.hand = Handdeck()
-	
+
 	def __lt__(self, other):
 		if self.score < other.score:
 			return True
 		else:
 			return False
-	
+
 	def __gt__(self, other):
 		if self.score > other.score:
 			return True
 		else:
 			return False
-	
+
 	def draw_new_cards(self):
 		self.hand.__init__()
-		
+
 		for card in range(5):
 			self.hand.cards.append(deck.blind.pop())
-	
+
 	def show(self):
 		self.show_possible_cards()
 		self.show_hand(True)
-	
+
 	def show_hand(self, visible=False):
 		if self.is_robot:
 			self.hand.arrange_hand_cards()
@@ -378,27 +376,28 @@ class Player:
 		else:
 			print(f'{self.name} holds ({len(self.hand.cards)}) card(s):')
 		print(cards)
-	
+
 	def show_possible_cards(self):
 		cards = ''
 		self.hand.get_possible_cards()
 		for card in self.hand.possible_cards:
 			cards += str(card)
 		print(f'{self.name} has played ({len(deck.cards_played)}) card(s) / '
-		      f'drawn ({len(self.hand.cards_drawn)}) card(s)'
-		      f' and can play ({len(self.hand.possible_cards)}) card(s):')
+		      f'drawn ({len(self.hand.cards_drawn)}) card(s) '
+		      f'and can play ({len(self.hand.possible_cards)}) card(s):')
 		print(cards)
-	
+
 	def draw_card_from_blind(self, cards=1):
 		for card in range(cards):
 			card = deck.card_from_blind()
 			self.hand.cards.append(card)
 			self.hand.cards_drawn.append(card)
-		# if bridge.is_client and bridge.is_online:
-		# 	bridge.push_data_to_server()
-	
+
+		if bridge.gc:
+			bridge.push_data_to_server()
+
 	def is_must_draw_card(self):
-		
+
 		'''
 		must draw card, if:
 		---------------------------------
@@ -416,7 +415,7 @@ class Player:
 		-------------
 			1		0		1		Y       N   <-- must draw card
 		'''
-		
+
 		stack_card = deck.get_top_card_from_stack()
 		if stack_card.rank == '6' and not self.hand.possible_cards:
 			return True
@@ -424,7 +423,7 @@ class Player:
 			return True
 		else:
 			return False
-	
+
 	def play_card(self, is_initial_card=False):
 		if not self.is_robot:
 			self.hand.arrange_hand_cards()
@@ -436,15 +435,16 @@ class Player:
 			self.hand.cards.remove(card)
 			deck.put_card_on_stack(card)
 			jchoice.clear_j()
-		# if bridge.is_client and bridge.is_online:
-		# 	bridge.push_data_to_server()
-	
+
+		if bridge.gc:
+			bridge.push_data_to_server()
+
 	def set_robot(self, is_robot=False):
 		self.is_robot = is_robot
-	
+
 	def is_robot(self):
 		return self.is_robot
-	
+
 	def auto_play(self):
 		# self.hand.arrange_hand_cards()
 		while self.hand.possible_cards:
@@ -463,13 +463,14 @@ class Bridge:
 	number_of_rounds = 0
 	number_of_games = 0
 	is_robot_game = None
-	is_online = False
-	is_server = False
-	#is_client = False
+
+	# is_online = False
+	# is_server = False
+	# is_client = False
 	gc = None
-	
+
 	def __init__(self, number_of_players: int, is_robot_game: bool):
-		
+
 		if number_of_players == 0:
 			while True:
 				try:
@@ -486,7 +487,7 @@ class Bridge:
 					print('Please enter value between 2 and 4')
 		else:
 			self.number_of_players = number_of_players
-		
+
 		if not is_robot_game:
 			while True:
 				try:
@@ -511,14 +512,14 @@ class Bridge:
 				break
 		else:
 			self.is_robot_game = is_robot_game
-		
+
 		try:
 			os.remove(f'{date.today()}_scores.txt')
 		except OSError as e:
 			print('no scorelist found')
-	
+
 	def print_the_rules_of_the_game(self):
-		
+
 		the_rules_of_the_game = f'''
 		
         {30 * " "}Game of Bridge
@@ -582,75 +583,76 @@ class Bridge:
         The game is over once a player reaches more than 125 points.
         
         '''
-		
+
 		print(the_rules_of_the_game)
-	
+
 	def start_game(self):
-		
-		if self.is_server or not self.is_online:
-			
-			self.number_of_games += 1
-			self.number_of_rounds = 0
-			
-			self.player_list.clear()
-			
-			for player in range(self.number_of_players):
-				self.player_list.append(
-					Player(f'Player-{player + 1}', self.is_robot_game))
-			
-			self.player_list[0].is_robot = False
-			
-			self.start_round()
-		else:
-			# pass
-			self.pull_data_from_server()
-	
+
+		# if self.is_server or not self.is_online:
+
+		self.number_of_games += 1
+		self.number_of_rounds = 0
+
+		self.player_list.clear()
+
+		for player in range(self.number_of_players):
+			self.player_list.append(
+				Player(f'Player-{player + 1}', self.is_robot_game))
+
+		self.player_list[0].is_robot = False
+
+		self.start_round()
+
+	# else:
+	# 	pass
+	# self.pull_data_from_server()
+
 	def start_round(self):
-		
+
 		self.number_of_rounds += 1
-		
-		if self.is_server or not self.is_online:
-			deck.__init__()
-			
-			for player in self.player_list:
-				player.draw_new_cards()
-			
-			self.player = self.set_shuffler()
-			self.player.play_card(is_initial_card=True)
-			self.play()
-		
-		else:
-			# pass
-			self.pull_data_from_server()
-	
+
+		# if self.is_server or not self.is_online:
+
+		deck.__init__()
+
+		for player in self.player_list:
+			player.draw_new_cards()
+
+		self.player = self.set_shuffler()
+		self.player.play_card(is_initial_card=True)
+		self.play()
+
+	# else:
+	# 	pass
+	# self.pull_data_from_server()
+
 	def set_shuffler(self):
-		
+
 		if self.shuffler is None:
 			self.shuffler = self.player_list[0]
 		else:
 			self.shuffler = max(self.player_list)
-			while self.shuffler != self.player_list[
-				0]:  # Shuffler must be set to playerlist[0]
+			while self.shuffler != self.player_list[0]:  # Shuffler must be set to playerlist[0]
 				self.cycle_playerlist()
-		
+
 		return self.shuffler
-	
+
 	def cycle_playerlist(self):
 		self.player_list.append(self.player_list.pop(0))
 		self.player = self.player_list[0]
-	
+
 	def activate_next_player(self):
-		
+
 		sevens = 0
 		eights = 0
 		aces = 0
 		key = 'n'
-		
+
 		# if self.is_client and self.is_online:
 		# 	pass  # self.pull_data_from_server()
-		
+
 		self.show_full_deck()
-		
+
 		for card in deck.cards_played:
 			if card.rank == '7':
 				sevens += 1
@@ -658,7 +660,7 @@ class Bridge:
 				eights += 1
 			elif card.rank == 'A':
 				aces += 1
-		
+
 		if eights >= 2:
 			if self.player.is_robot:
 				key = random.choice(['a', 'n'])
@@ -675,21 +677,21 @@ class Bridge:
 				print(f"\n{13 * ' '}? ? ? How to share the 8's ? ? ?\n")
 				print(f'{13 * " "}| (n)ext player | (a)ll players |\n')
 				key = keyboard.read_hotkey(suppress=False)
-		
+
 		self.player.hand.cards_drawn.clear()
 		self.cycle_playerlist()
 		deck.cards_played.clear()
-		
+
 		for card in range(sevens):
 			self.player.draw_card_from_blind()
 			self.player.hand.cards_drawn.clear()
-		
+
 		if eights and key == 'n':
 			for eight in range(eights):
 				self.player.draw_card_from_blind(2)
 				self.player.hand.cards_drawn.clear()
 			self.cycle_playerlist()
-		
+
 		if eights and key == 'a':
 			leap = 1
 			while leap <= eights:
@@ -701,7 +703,7 @@ class Bridge:
 					self.cycle_playerlist()
 					eights += 1
 				leap += 1
-		
+
 		if aces:
 			leap = 1
 			while leap <= aces:
@@ -711,35 +713,35 @@ class Bridge:
 					self.cycle_playerlist()
 					aces += 1
 				leap += 1
-		
-		# if self.is_client and self.is_online:
-		# 	self.push_data_to_server()
-	
+
+		if self.gc:
+			self.push_data_to_server()
+
 	def show_full_deck(self):
 		print(f'\n{84 * "-"}\n')
 		self.show_all_players(deck.is_visible)
-		
+
 		deck.show()
 		self.player.show()
-		
+
 		'''
 		for player in self.player_list:
 			if player.name == 'Player-1':
 				player.show()
 		'''
-		
+
 		print(f'\n'
 		      f'\n{7 * " "}| TAB: toggle |  SHIFT: put  |  ALT: draw  |'
 		      f'\n{7 * " "}|            SPACE: next Player            |'
 		      f'\n{7 * " "}|  (s)cores   |   (r)ules    |   (q)uit    |')
-		
+
 		'''
 		if self.is_client or self.is_server or self.is_online or True:
 			print(f'{7 * " "}|  client {self.is_client:<4}|  '
 			      f'server  {self.is_server:<4}|  online {self.is_online:<4}|\n')
 			server.show_connections()
 		'''
-	
+
 	def make_choice_for_J(self):
 		if self.player.is_robot:
 			jchoice.j = jchoice.js[random.randint(0, 3)]
@@ -754,14 +756,14 @@ class Bridge:
 					self.show_full_deck()
 				if jkey == 'space':
 					break
-	
+
 	def show_all_players(self, is_visible=False):
 		for player in sorted(self.player_list, key=lambda p: p.name):
 			if player == self.player:
 				player.show_hand(True)
 			else:
 				player.show_hand(is_visible)
-	
+
 	def finish_round(self):
 		if deck.get_top_card_from_stack().rank == 'J':
 			self.player.score -= 20 * len(
@@ -775,7 +777,7 @@ class Bridge:
 			if player.score == 125:
 				player.score = 0
 		self.show_all_players(True)
-		
+
 		try:
 			f = open(f'{date.today()}_scores.txt')
 		except IOError:
@@ -792,11 +794,11 @@ class Bridge:
 				for player in sorted(self.player_list, key=lambda p: p.name):
 					f.write(" {:4d}    ".format(player.score))
 				f.write(f'{4 * " "}{(deck.shufflings - 1) * " *"}\n')
-		
+
 		self.show_scores()
-		
+
 		self.set_shuffler()
-		
+
 		if self.shuffler.score <= 125:
 			print(
 				f'\n  {13 * " "}{self.shuffler.name} will start next round\n')
@@ -812,7 +814,7 @@ class Bridge:
 			print(f'{21 * " "}| (n)ew game |\n')
 			keyboard.wait('n')
 			self.start_game()
-	
+
 	def show_scores(self):
 		try:
 			with open(f'{date.today()}_scores.txt') as f:
@@ -820,14 +822,14 @@ class Bridge:
 		except IOError:
 			print(f'\n\n{6 * " "}'
 			      f'Playing 1st round - No score list availabe yet\n')
-	
+
 	def check_if_bridge(self):
 		if len(deck.bridge_monitor) == 4:
-			
+
 			self.show_full_deck()
-			
+
 			print(f'\n{17 * " "}* * * B R I D G E * * *\n')
-			
+
 			if self.player.is_robot:
 				if self.player.hand.count_points() == 0:
 					key = 'y'
@@ -858,16 +860,16 @@ class Bridge:
 				return True
 		else:
 			return False
-	
+
 	def is_next_player_possible(self):
-		
+
 		if self.check_if_bridge():
 			self.finish_round()
 			return False
-		
+
 		elif deck.get_top_card_from_stack().rank == '6':
 			return False
-		
+
 		elif not self.player.hand.cards:
 			self.show_full_deck()
 			print(f'\n\n{7 * " "}'
@@ -875,9 +877,9 @@ class Bridge:
 			keyboard.wait('space')
 			self.finish_round()
 			return True
-		
+
 		elif deck.get_top_card_from_stack().rank == 'J':
-			
+
 			if deck.cards_played:
 				self.make_choice_for_J()
 				return True
@@ -897,64 +899,17 @@ class Bridge:
 														&
 			   0/1     0/1     0/1      N       <-- when '6'
 		'''
-		
+
 		if deck.cards_played:
 			return True
-		
+
 		elif not deck.cards_played:
 			if not self.player.hand.possible_cards and self.player.hand.cards_drawn:
 				return True
 			else:
 				return False
-	
+
 	'''
-	def start_server(self):
-		
-		if not self.is_server:
-			sg_thread = threading.Thread(target=server.start)
-			sg_thread.daemon = True
-			sg_thread.start()
-			self.is_server = True
-	
-	def stop_server(self):
-		if self.is_server:
-			server.stop()
-			self.is_server = False
-	
-	def start_client(self):
-		if not self.is_client:
-			cg_thread = threading.Thread(target=client.start)
-			cg_thread.daemon = True
-			cg_thread.start()
-			self.is_client = True
-	
-	def stop_client(self):
-		if self.is_client:
-			client.stop()
-			self.is_client = False
-	
-	def start_online(self):
-		if not self.is_online:
-			self.is_online = True
-			self.push_data_to_server()
-	'''
-	
-	# if not self.is_online:
-	# 	if not self.is_server:
-	# 		self.start_server()
-	# 	if not self.is_client:
-	# 		self.start_client()
-	# 	self.is_online = True
-	
-	'''
-	def stop_online(self):
-		if self.is_online:
-			# if self.is_client:
-			# 	self.stop_client()
-			# if self.is_server:
-			# 	self.stop_server()
-			self.is_online = False
-	
 	def push_data_to_server(self):
 		if self.is_client and self.is_online:
 			exchange_data = [deck.__dict__, self.__dict__]
@@ -973,39 +928,50 @@ class Bridge:
 		self.player_list[1].__dict__ = data_from_server[3]
 		self.player_list[2].__dict__ = data_from_server[4]
 	'''
-	
+
+	def push_data_to_server(self):
+		if self.gc:
+
+			# 	data = [deck.__dict__, self.__dict__]
+			#
+			# 	for player in self.player_list:
+			# 		data.append(player.__dict__)
+			#
+			# 	bdata = pickle.dumps(data)
+			#
+			# 	self.gc.write(bdata)
+
+			data = 'data'.encode()
+			self.gc.write(data)
+
 	def start_client(self):
+
 		if not self.gc:
 			self.gc = g_client.G_Client()
-			gc_thread = threading.Thread(target=self.gc.run())
-			gc_thread.daemon = True
+			gc_thread = threading.Thread(target=self.gc.run(), daemon=True)
 			gc_thread.start()
-			#gc_thread.is_alive()
-			#self.is_client = True
-	
+
 	def stop_client(self):
 		if self.gc:
 			self.gc.stop()
 			self.gc = None
-			#self.is_client = False
-	
+
 	def play(self):
-		
+
 		while True:
-			
+
 			self.show_full_deck()
-			
+
 			if self.player.is_robot:
-				while not self.is_next_player_possible() \
-						or self.player.hand.possible_cards:
+				while not self.is_next_player_possible() or self.player.hand.possible_cards:
 					self.player.auto_play()
 				key = keyboard.read_hotkey(suppress=False)
 				if key == 'space':
 					self.activate_next_player()
-			
+
 			else:
 				key = keyboard.read_hotkey(suppress=False)
-				
+
 				if key == 'tab':
 					self.player.hand.toggle_possible_cards()
 				elif key == 'shift':
@@ -1014,7 +980,7 @@ class Bridge:
 					self.player.draw_card_from_blind()
 				elif key == 'space' and self.is_next_player_possible():
 					self.activate_next_player()
-				
+
 				elif key == 's':
 					self.show_scores()
 					print(f'{21 * " "}|     SPACE    |\n')
@@ -1025,7 +991,7 @@ class Bridge:
 					keyboard.wait('space')
 				elif key == 'q':
 					break
-				
+
 				elif key == 'ctrl+v':
 					if deck.is_visible:
 						deck.is_visible = False
@@ -1033,7 +999,7 @@ class Bridge:
 						deck.is_visible = True
 				elif key == 'ctrl+r':
 					self.start_round()
-					
+
 					'''
 					  is      is     Server
 					Client  Server  available    Online
@@ -1050,35 +1016,17 @@ class Bridge:
 					if is_client and is_server_available   1
 					(1 player: is_server)
 					'''
-					
-					'''
-					elif key == 'ctrl+o':
-						if not self.is_online:
-							self.start_online()
-						else:
-							self.stop_online()
-					
-					elif key == 'ctrl+s':
-						if not self.is_server:
-							self.start_server()
-						else:
-							self.stop_server()
-					
-					elif key == 'ctrl+p':
-						if not self.is_client:
-							self.start_client()
-						else:
-							self.stop_client()
-					'''
+
 				elif key == 'ctrl+p':
 					if not self.gc:
 						self.start_client()
 					else:
 						self.stop_client()
-				
+
 				elif key == 'ctrl+o':
-					self.gc.write('abc123'.encode('utf-8'))
-				
+					if self.gc:
+						self.gc.write('abc123'.encode())
+
 				elif key == 'ctrl+6':
 					for suit in suits:
 						self.player.hand.cards.append(Card(suit, '6'))
@@ -1097,7 +1045,7 @@ class Bridge:
 
 
 if __name__ == "__main__":
-	
+
 	parser = argparse.ArgumentParser("Bridge",
 	                                 description=Bridge.print_the_rules_of_the_game(
 		                                 None))
@@ -1110,10 +1058,6 @@ if __name__ == "__main__":
 	except AttributeError:
 		parser.print_help()
 		parser.exit()
-	
-	# server = game_server.Server()
-	# client = game_client.Client()
-	# client = Client()
-	
+
 	bridge = Bridge(args.number_of_players, args.is_robot_game)
 	bridge.start_game()

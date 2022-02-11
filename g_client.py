@@ -4,49 +4,51 @@ import threading
 
 class G_Client:
 	is_active = True
-	
+
 	def __init__(self, host='127.0.0.1', port=54321):
-		
+
 		self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		self.client.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 		self.client.connect((host, port))
-		
+
 		self.nickname = input("Choose a nickname: ")
-		self.client.send(self.nickname.encode("utf-8"))
-	
-	def receive(self):
+		self.client.send(self.nickname.encode())
+
+	def receive(self):      # <= Server.broadcast
 		while self.is_active:
 			try:
-				message = self.client.recv(1024).decode("utf-8")
+				message = self.client.recv(2048).decode()
 				print(message)
-			except:
-				print("an error occurred!")
+			except IOError:
+				print("an IOError occurred!")
 				self.stop()
 				break
-	
-	def write(self, message=None):
-		while self.is_active:
-			message = f'{self.nickname}: {input("")}'
-			
-			self.client.send(message.encode('utf-8'))
-	
+
+	def write(self, data=None):  # => Server.handle
+		if not data:
+			while self.is_active:
+				message = f'{self.nickname}: {input("")}'
+				self.client.send(message.encode())
+		else:
+			self.client.send(data)
+
 	def run(self):
-		receive_threat = threading.Thread(target=self.receive, daemon=False)
+		receive_threat = threading.Thread(target=self.receive)
 		receive_threat.start()
-		
-		write_thread = threading.Thread(target=self.write, daemon=True)
+
+		write_thread = threading.Thread(target=self.write)
 		write_thread.start()
-	
+
 	def stop(self):
-		self.client.send('quit'.encode('utf-8'))
+		self.client.send('quit'.encode())
 		self.is_active = False
 		self.client.close()
-		
+
 
 if __name__ == '__main__':
 	gc = G_Client()
 	gc.run()
-	
+
 
 '''
 class Client():
@@ -83,7 +85,7 @@ class Client():
 		return self.game_data
 
 	def upload_data(self, data=b''):
-		self.sock.sendall(data)
+		self.sock.send)(data)
 
 	def stop(self):
 		self.sock.close()
