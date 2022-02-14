@@ -14,14 +14,18 @@ class G_Server:
 		self.server.bind((host, port))
 		self.server.listen()
 
+	@classmethod
+	def get_nicknames(cls):
+		return (f"--- now online: {cls.nicknames} ---")
+
 	def broadcast(self, message):
 		for client in self.clients:
-			client.send(message)
+			client.sendall(message)
 
 	def add_client(self, client, nickname):
 		self.clients.append(client)
 		self.nicknames.append(nickname)
-		print(f"--- now online: {self.nicknames} ---")
+		print(self.get_nicknames())
 
 	def get_nickname_of_client(self, client):
 		index = self.clients.index(client)
@@ -34,19 +38,19 @@ class G_Server:
 		self.nicknames.remove(nickname)
 		self.clients.remove(client)
 		client.close()
-		print(f"--- now online: {self.nicknames} ---")
+		print(self.get_nicknames())
 
 	def handle(self, client):
 		while self.is_active:
 			try:
-				message = client.recv(2048)
+				message = client.recv(4096)
 				if message.decode()[-4:] == "quit":
 					advice = f"--- broadcast: " \
 					          f"{self.get_nickname_of_client(client)} " \
 					          f"left ---"
 					print(advice)
-					self.broadcast(advice.encode())
 					self.remove_client(client)
+					self.broadcast(advice.encode())
 					break
 				else:
 					self.broadcast(message)
@@ -60,17 +64,16 @@ class G_Server:
 				self.broadcast(advice.encode())
 				break
 
-
 	def receive(self):
 		while self.is_active:
 			# Accept Connection
 			client, address = self.server.accept()  # Waiting for new client
 			print("connected with {}".format(str(address)))
 
-			client.send("--- you are connected to the server! ---\n"
+			client.sendall("--- you are connected to the server! ---\n"
 			               .encode())
 
-			nickname = client.recv(1024).decode()
+			nickname = client.recv(4096).decode()
 			self.add_client(client, nickname)
 			print("nickname is {}".format(nickname))
 			self.broadcast(f"--- broadcast: {nickname} joined! ---"

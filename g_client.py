@@ -12,12 +12,12 @@ class G_Client:
 		self.client.connect((host, port))
 
 		self.nickname = input("Choose a nickname: ")
-		self.client.send(self.nickname.encode())
+		self.client.sendall(self.nickname.encode())
 
 	def receive(self):      # <= Server.broadcast
 		while self.is_active:
 			try:
-				message = self.client.recv(2048).decode()
+				message = self.client.recv(4096).decode()
 				print(message)
 			except IOError:
 				print("an IOError occurred!")
@@ -25,13 +25,13 @@ class G_Client:
 				break
 
 	def write(self, data=None):  # => Server.handle
-
 		if not data:
 			while self.is_active:
-				message = f'{self.nickname}: {input("")}'
-				self.client.send(message.encode())
+				message = f'{self.nickname}:{input("")}'
+				self.client.sendall(message.encode())
 		else:
-			self.client.send(data)
+			self.client.sendall(data)
+			data = None
 
 	def run(self):
 		receive_threat = threading.Thread(target=self.receive)
@@ -41,7 +41,7 @@ class G_Client:
 		write_thread.start()
 
 	def stop(self):
-		self.client.send('quit'.encode())
+		self.client.sendall('quit'.encode())
 		self.is_active = False
 		self.client.close()
 
@@ -86,7 +86,7 @@ class Client():
 		return self.game_data
 
 	def upload_data(self, data=b''):
-		self.sock.send)(data)
+		self.sock.sendall)(data)
 
 	def stop(self):
 		self.sock.close()

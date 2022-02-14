@@ -9,7 +9,9 @@ from datetime import date
 import keyboard
 
 import g_client
+import g_server
 import pickle
+
 
 suits = ['\u2666', '\u2665', '\u2660', '\u2663']
 ranks = ['6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
@@ -216,11 +218,11 @@ class Deck:
 		deck.bridge_monitor.append(card)
 
 	def show_bridge_monitor(self):
-		bridge = ''
+		bridge_stack = ''
 		for card in self.bridge_monitor:
-			bridge = str(card) + bridge
+			bridge_stack = str(card) + bridge_stack
 		print(f'Bridge monitor ({len(self.bridge_monitor)}) card(s):')
-		print(f'{bridge}\n')
+		print(f'{bridge_stack}\n')
 
 	def show_cards_played(self):
 		cards_played = ''
@@ -464,9 +466,6 @@ class Bridge:
 	number_of_games = 0
 	is_robot_game = None
 
-	# is_online = False
-	# is_server = False
-	# is_client = False
 	gc = None
 
 	def __init__(self, number_of_players: int, is_robot_game: bool):
@@ -735,12 +734,9 @@ class Bridge:
 		      f'\n{7 * " "}|            SPACE: next Player            |'
 		      f'\n{7 * " "}|  (s)cores   |   (r)ules    |   (q)uit    |')
 
-		'''
-		if self.is_client or self.is_server or self.is_online or True:
-			print(f'{7 * " "}|  client {self.is_client:<4}|  '
-			      f'server  {self.is_server:<4}|  online {self.is_online:<4}|\n')
-			server.show_connections()
-		'''
+		if self.gc:
+			print(f'{7 * " "}| {g_server.G_Server.get_nicknames()} |')
+
 
 	def make_choice_for_J(self):
 		if self.player.is_robot:
@@ -943,7 +939,9 @@ class Bridge:
 			#
 			# self.gc.write(bdata)
 
-			data = 'data'.encode()
+			data = pickle.dumps(deck.__dict__)
+
+			#data = 'data'.encode()
 			self.gc.write(data)
 
 	def start_client(self):
